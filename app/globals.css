@@ -1,3 +1,19 @@
 @import "tailwindcss";
 
 
+/* En tu archivo global.css o module.css */
+.chessboard-container {
+  container-type: inline-size;
+}
+
+@container (max-width: 400px) {
+  .chessboard-notation {
+    font-size: 10px;
+  }
+}
+
+@container (max-width: 300px) {
+  .chessboard-notation {
+    font-size: 8px;
+  }
+}
