@@ -1,209 +1,239 @@
-"use client"
+// app/explore/page.tsx
+'use client'
+
 import { useState, useEffect } from 'react'
-import { NextPage } from 'next'
-import Head from 'next/head'
-
-import { mockOpenings } from '../data/mockOpenings'
-import SearchBar from './components/searchBar'
+import { useChessStore } from '../stores/useChessStore'
+import SearchHeader from './components/searchHeader'
 import FilterPanel from './components/filterPanel'
-import OpeningCardSkeleton from './components/openingCardSkeleton'
 import OpeningGrid from './components/openingGrid'
-import Pagination from './components/pagination'
 
-export interface Opening {
+
+interface Opening {
   id: string
   eco: string
   name: string
   moves: string[]
-  description: string
-  color: 'white' | 'black'
-  difficulty: 'beginner' | 'intermediate' | 'advanced'
+  description?: string
+  whiteWins: number
+  blackWins: number
+  draws: number
+  totalGames: number
   popularity: number
-  winRate: number
-  rating: number
-  games: number
+  initialFen?: string
+  _count?: {
+    userFavorites: number
+    userProgress: number
+  }
 }
 
-const ExplorePage: NextPage = () => {
+interface Filters {
+  search: string
+  eco: string
+  color: 'all' | 'white' | 'black'
+  difficulty: 'all' | 'beginner' | 'intermediate' | 'advanced'
+  popularity: 'all' | 'high' | 'medium' | 'low'
+}
+
+export default function ExplorePage() {
   const [openings, setOpenings] = useState<Opening[]>([])
   const [filteredOpenings, setFilteredOpenings] = useState<Opening[]>([])
-  const [searchQuery, setSearchQuery] = useState('')
-  const [filters, setFilters] = useState({
-    color: [] as string[],
-    eco: [] as string[],
-    difficulty: [] as string[],
-    popularity: [] as string[],
-  })
   const [loading, setLoading] = useState(true)
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
-  const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 6
+  const [error, setError] = useState<string | null>(null)
+  const [showMobileFilters, setShowMobileFilters] = useState(false)
+  
+  const [filters, setFilters] = useState<Filters>({
+    search: '',
+    eco: 'all',
+    color: 'all',
+    difficulty: 'all',
+    popularity: 'all'
+  })
 
-  // Simular carga de datos
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pagination, setPagination] = useState<any>(null)
+
+  const { fetchOpenings } = useChessStore()
+
+  // ✅ Cargar aperturas desde la API
   useEffect(() => {
     const loadOpenings = async () => {
       setLoading(true)
-      // En un futuro, esto será una llamada a la API
-      setTimeout(() => {
-        setOpenings(mockOpenings)
-        setFilteredOpenings(mockOpenings)
+      setError(null)
+      
+      try {
+        const apiFilters = {
+          search: filters.search || undefined,
+          eco: filters.eco !== 'all' ? filters.eco : undefined,
+          page: currentPage,
+          limit: 12
+        }
+
+        const response = await fetchOpenings(apiFilters)
+
+        if (response && response.openings) {
+          setOpenings(response.openings)
+          setFilteredOpenings(response.openings)
+          setPagination(response.pagination)
+        } else {
+          throw new Error('Formato de respuesta inválido')
+        }
+      } catch (err) {
+        console.error('❌ Error cargando aperturas:', err)
+        setError(err instanceof Error ? err.message : 'Error al cargar las aperturas')
+        
+        // Fallback a datos locales
+        try {
+          const localOpenings = await import('../data/openings.json')
+          setOpenings(localOpenings.default)
+          setFilteredOpenings(localOpenings.default)
+        } catch (fallbackError) {
+          console.error('Fallback también falló:', fallbackError)
+        }
+      } finally {
         setLoading(false)
-      }, 1000)
+      }
     }
 
     loadOpenings()
-  }, [])
+  }, [filters.search, filters.eco, currentPage, fetchOpenings])
 
-  // Aplicar búsqueda y filtros
+  // ✅ Filtrado local adicional
   useEffect(() => {
-    let results = openings
+    if (!openings.length) return
 
-    // Aplicar búsqueda
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase()
-      results = results.filter(opening => 
-        opening.name.toLowerCase().includes(query) ||
-        opening.eco.toLowerCase().includes(query) ||
-        opening.moves.join(' ').toLowerCase().includes(query)
-      )
-    }
+    let filtered = [...openings]
 
-    // Aplicar filtros
-    if (filters.color.length > 0) {
-      results = results.filter(opening => filters.color.includes(opening.color))
-    }
-    if (filters.eco.length > 0) {
-      results = results.filter(opening => filters.eco.some(eco => opening.eco.startsWith(eco)))
-    }
-    if (filters.difficulty.length > 0) {
-      results = results.filter(opening => filters.difficulty.includes(opening.difficulty))
-    }
-    if (filters.popularity.length > 0) {
-      results = results.filter(opening => {
-        const pop = opening.popularity
-        return filters.popularity.some(p => {
-          if (p === 'very-popular') return pop >= 80
-          if (p === 'popular') return pop >= 60 && pop < 80
-          if (p === 'average') return pop >= 40 && pop < 60
-          if (p === 'uncommon') return pop < 40
-          return true
-        })
+    // Filtro por color
+    if (filters.color !== 'all') {
+      filtered = filtered.filter(opening => {
+        const firstMove = opening.moves[0]?.toLowerCase() || ''
+        return filters.color === 'white' ? firstMove.includes('e4') || firstMove.includes('d4') 
+               : firstMove.includes('e5') || firstMove.includes('c5')
       })
     }
 
-    setFilteredOpenings(results)
-    setCurrentPage(1) // Reset a primera página al filtrar
-  }, [searchQuery, filters, openings])
+    // Filtro por dificultad
+    if (filters.difficulty !== 'all') {
+      filtered = filtered.filter(opening => {
+        const totalMoves = opening.moves.length
+        switch (filters.difficulty) {
+          case 'beginner': return totalMoves <= 5
+          case 'intermediate': return totalMoves > 5 && totalMoves <= 10
+          case 'advanced': return totalMoves > 10
+          default: return true
+        }
+      })
+    }
 
-  // Paginación
-  const totalPages = Math.ceil(filteredOpenings.length / itemsPerPage)
-  const startIndex = (currentPage - 1) * itemsPerPage
-  const currentOpenings = filteredOpenings.slice(startIndex, startIndex + itemsPerPage)
+    // Filtro por popularidad
+    if (filters.popularity !== 'all') {
+      filtered = filtered.filter(opening => {
+        switch (filters.popularity) {
+          case 'high': return opening.popularity >= 0.7
+          case 'medium': return opening.popularity >= 0.4 && opening.popularity < 0.7
+          case 'low': return opening.popularity < 0.4
+          default: return true
+        }
+      })
+    }
+
+    setFilteredOpenings(filtered)
+  }, [openings, filters.color, filters.difficulty, filters.popularity])
+
+  // ✅ Manejar cambios en filtros
+  const handleFilterChange = (newFilters: Partial<Filters>) => {
+    setFilters(prev => ({ ...prev, ...newFilters }))
+    setCurrentPage(1)
+  }
+
+  // ✅ Manejar recarga
+  const handleRetry = () => {
+    setError(null)
+    setCurrentPage(1)
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+        <div className="text-center max-w-md">
+          <div className="text-red-500 text-6xl mb-4">⚠️</div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Error al cargar</h2>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <button
+            onClick={handleRetry}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors w-full"
+          >
+            Reintentar
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
-<>
-
-      <Head>
-        <title>Explore Openings - Chess Openings</title>
-        <meta name="description" content="Browse and search through thousands of chess openings" />
-      </Head>
-
-      {/* Header de la página */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-6">
-            <div>
-              <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
-                Explore Openings
-              </h1>
-              <p className="text-lg text-gray-600">
-                Discover {openings.length} chess openings with detailed analysis and statistics
-              </p>
-            </div>
-            
-            <SearchBar 
-              value={searchQuery}
-              onChange={setSearchQuery}
-              resultsCount={filteredOpenings.length}
-            />
-          </div>
-
-          {/* Controles de vista y filtros móviles */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`p-2 rounded-lg ${
-                  viewMode === 'grid' 
-                    ? 'bg-blue-100 text-blue-600' 
-                    : 'text-gray-400 hover:text-gray-600'
-                }`}
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
-                </svg>
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={`p-2 rounded-lg ${
-                  viewMode === 'list' 
-                    ? 'bg-blue-100 text-blue-600' 
-                    : 'text-gray-400 hover:text-gray-600'
-                }`}
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16"/>
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header de Búsqueda */}
+      <SearchHeader
+        filters={filters}
+        onFilterChange={handleFilterChange}
+        resultsCount={filteredOpenings.length}
+        totalCount={pagination?.total || 0}
+        loading={loading}
+        showMobileFilters={showMobileFilters}
+        onToggleMobileFilters={() => setShowMobileFilters(!showMobileFilters)}
+      />
 
       {/* Contenido Principal */}
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Panel de Filtros - Sidebar */}
-          <aside className="lg:w-80 flex-shrink-0">
-            <FilterPanel 
-              filters={filters}
-              onFiltersChange={setFilters}
-            />
-          </aside>
-
-          {/* Contenido Principal */}
-          <main className="flex-1 min-h-screen">
-            {loading ? (
-              // Loading Skeletons
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <OpeningCardSkeleton key={i} />
-                ))}
-              </div>
-            ) : (
-              <>
-                <OpeningGrid 
-                  openings={currentOpenings}
-                  viewMode={viewMode}
+      <div className="container mx-auto px-4 py-6">
+        <div className="flex flex-col lg:flex-row gap-6">
+          
+          {/* Panel de Filtros - Mobile */}
+          {showMobileFilters && (
+            <div className="lg:hidden">
+              <div className="fixed inset-0 bg-black bg-opacity-50 z-40" 
+                   onClick={() => setShowMobileFilters(false)} />
+              <div className="fixed top-0 left-0 h-full w-80 bg-white z-50 overflow-y-auto p-6 transform transition-transform">
+                <FilterPanel
+                  filters={filters}
+                  onFilterChange={handleFilterChange}
+                  resultsCount={filteredOpenings.length}
+                  totalCount={pagination?.total || 0}
+                  loading={loading}
+                  onClose={() => setShowMobileFilters(false)}
                 />
-                
-                {/* Paginación */}
-                {totalPages > 1 && (
-                  <div className="mt-12">
-                    <Pagination
-                      currentPage={currentPage}
-                      totalPages={totalPages}
-                      onPageChange={setCurrentPage} 
-                    />
-                  </div>
-                )}
-              </>
-            )}
-          </main>
+              </div>
+            </div>
+          )}
+
+          {/* Panel de Filtros - Desktop */}
+          <div className="hidden lg:block lg:w-80 flex-shrink-0">
+            <FilterPanel
+              filters={filters}
+              onFilterChange={handleFilterChange}
+              resultsCount={filteredOpenings.length}
+              totalCount={pagination?.total || 0}
+              loading={loading}
+            />
+          </div>
+
+          {/* Grid de Aperturas */}
+          <div className="flex-1 min-w-0"> {/* min-w-0 para prevenir overflow */}
+            <OpeningGrid
+              openings={filteredOpenings}
+              loading={loading}
+              currentPage={currentPage}
+              totalPages={pagination?.pages || 1}
+              onPageChange={setCurrentPage}
+              emptyMessage={
+                filters.search || filters.eco !== 'all' || filters.color !== 'all' || 
+                filters.difficulty !== 'all' || filters.popularity !== 'all'
+                  ? "No se encontraron aperturas con los filtros seleccionados."
+                  : "No hay aperturas disponibles en este momento."
+              }
+            />
+          </div>
         </div>
       </div>
-  </>
+    </div>
   )
 }
-
-export default ExplorePage

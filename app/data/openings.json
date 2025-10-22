@@ -1,0 +1,36 @@
+[
+  {
+    "id": "1",
+    "eco": "C60",
+    "name": "Ruy López",
+    "moves": ["e4", "e5", "Nf3", "Nc6", "Bb5"],
+    "description": "Una de las aperturas más antiguas y analizadas del ajedrez.",
+    "whiteWins": 1542,
+    "blackWins": 1103,
+    "draws": 855,
+    "totalGames": 3500,
+    "popularity": 0.85,
+    "initialFen": "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2",
+    "_count": {
+      "userFavorites": 45,
+      "userProgress": 120
+    }
+  },
+  {
+    "id": "2", 
+    "eco": "B20",
+    "name": "Defensa Siciliana",
+    "moves": ["e4", "c5"],
+    "description": "Defensa agresiva y popular para las negras.",
+    "whiteWins": 1820,
+    "blackWins": 1630,
+    "draws": 1550,
+    "totalGames": 5000,
+    "popularity": 0.78,
+    "initialFen": "rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2",
+    "_count": {
+      "userFavorites": 67,
+      "userProgress": 189
+    }
+  }
+]

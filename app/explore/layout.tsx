@@ -10,7 +10,6 @@ interface ExploreLayoutProps {
 const ExploreLayout: React.FC<ExploreLayoutProps> = ({ children }) => {
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
       {children}
       <Footer />
     </div>

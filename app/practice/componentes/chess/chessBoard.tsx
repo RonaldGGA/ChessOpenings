@@ -1,7 +1,7 @@
 // components/chess/ChessBoard.tsx
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Chessboard } from 'react-chessboard';
 import { useChessStore } from '../../../stores/useChessStore';
 import { useUIStore } from '../../../stores/useUiStore';

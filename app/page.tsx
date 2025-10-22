@@ -9,7 +9,6 @@ import FeaturesSection from './components/sections/featuresSection';
 export default function Home() {
   return (
     <div className="">
-      <Header/>
       <main>
         <HeroSection />
         <FeaturesSection/>

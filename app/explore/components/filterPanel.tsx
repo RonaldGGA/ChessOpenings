@@ -1,189 +1,196 @@
-"use client"
+// components/explore/FilterPanel.tsx
+'use client'
 
-import { useState } from 'react'
-
-interface FilterPanelProps {
-  filters: {
-    color: string[]
-    eco: string[]
-    difficulty: string[]
-    popularity: string[]
-  }
-  onFiltersChange: (filters: any) => void
+interface Filters {
+  search: string
+  eco: string
+  color: 'all' | 'white' | 'black'
+  difficulty: 'all' | 'beginner' | 'intermediate' | 'advanced'
+  popularity: 'all' | 'high' | 'medium' | 'low'
 }
 
-const FilterPanel: React.FC<FilterPanelProps> = ({ filters, onFiltersChange }) => {
-  const [isExpanded, setIsExpanded] = useState(false)
+interface FilterPanelProps {
+  filters: Filters
+  onFilterChange: (filters: Partial<Filters>) => void
+  resultsCount: number
+  totalCount: number
+  loading: boolean
+  onClose?: () => void
+}
 
-  const filterOptions = {
-    color: [
-      { value: 'white', label: 'Plays as White', icon: '⚪' },
-      { value: 'black', label: 'Plays as Black', icon: '⚫' }
-    ],
-    eco: [
-      { value: 'A', label: 'A: Flank Openings' },
-      { value: 'B', label: 'B: Semi-Open Games' },
-      { value: 'C', label: 'C: Open Games (1.e4 e5)' },
-      { value: 'D', label: 'D: Closed Games (1.d4 d5)' },
-      { value: 'E', label: 'E: Indian Defenses' }
-    ],
-    difficulty: [
-      { value: 'beginner', label: '⭐ Beginner' },
-      { value: 'intermediate', label: '⭐⭐ Intermediate' },
-      { value: 'advanced', label: '⭐⭐⭐ Advanced' }
-    ],
-    popularity: [
-      { value: 'very-popular', label: '⭐⭐⭐⭐⭐ Very Popular' },
-      { value: 'popular', label: '⭐⭐⭐⭐ Popular' },
-      { value: 'average', label: '⭐⭐⭐ Average' },
-      { value: 'uncommon', label: '⭐⭐ Uncommon' }
-    ]
+const ecoOptions = [
+  { value: 'all', label: 'Todas las categorías ECO' },
+  { value: 'A', label: 'A - Aperturas de flanco' },
+  { value: 'B', label: 'B - Aperturas semiabiertas' },
+  { value: 'C', label: 'C - Aperturas abiertas' },
+  { value: 'D', label: 'D - Gambito de Dama' },
+  { value: 'E', label: 'E - Defensas indias' },
+]
+
+const colorOptions = [
+  { value: 'all', label: 'Ambos colores' },
+  { value: 'white', label: 'Blancas' },
+  { value: 'black', label: 'Negras' },
+]
+
+const difficultyOptions = [
+  { value: 'all', label: 'Todas las dificultades' },
+  { value: 'beginner', label: 'Principiante' },
+  { value: 'intermediate', label: 'Intermedio' },
+  { value: 'advanced', label: 'Avanzado' },
+]
+
+const popularityOptions = [
+  { value: 'all', label: 'Toda popularidad' },
+  { value: 'high', label: 'Alta popularidad' },
+  { value: 'medium', label: 'Popularidad media' },
+  { value: 'low', label: 'Baja popularidad' },
+]
+
+export default function FilterPanel({
+  filters,
+  onFilterChange,
+  resultsCount,
+  totalCount,
+  loading,
+  onClose
+}: FilterPanelProps) {
+
+  const handleFilterUpdate = (key: keyof Filters, value: string) => {
+    onFilterChange({ [key]: value })
   }
 
-  const updateFilter = (filterType: keyof typeof filters, value: string) => {
-    const currentFilters = filters[filterType]
-    const newFilters = currentFilters.includes(value)
-      ? currentFilters.filter(item => item !== value)
-      : [...currentFilters, value]
-    
-    onFiltersChange({
-      ...filters,
-      [filterType]: newFilters
+  const clearFilters = () => {
+    onFilterChange({
+      search: '',
+      eco: 'all',
+      color: 'all',
+      difficulty: 'all',
+      popularity: 'all'
     })
   }
 
-  const clearAllFilters = () => {
-    onFiltersChange({
-      color: [],
-      eco: [],
-      difficulty: [],
-      popularity: []
-    })
-  }
-
-  const activeFilterCount = Object.values(filters).reduce((count, current) => count + current.length, 0)
+  const hasActiveFilters = filters.eco !== 'all' || 
+                          filters.color !== 'all' || 
+                          filters.difficulty !== 'all' || 
+                          filters.popularity !== 'all'
 
   return (
-    <>
-      {/* Mobile Filter Trigger */}
-      <div className="lg:hidden mb-6">
-        <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="w-full flex items-center justify-between p-4 bg-white border border-gray-300 rounded-xl shadow-sm hover:shadow-md transition-shadow"
-        >
-          <span className="font-medium text-gray-900">
-            Filters {activeFilterCount > 0 && `(${activeFilterCount})`}
-          </span>
-          <svg 
-            className={`w-5 h-5 text-gray-500 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
-      </div>
-
-      {/* Filter Panel */}
-      <div className={`
-        bg-white rounded-xl shadow-sm border border-gray-200 p-6 h-fit
-        ${isExpanded ? 'block' : 'hidden lg:block'}
-      `}>
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
-          {activeFilterCount > 0 && (
+    <div className="bg-white rounded-xl shadow-sm border p-6 h-fit lg:sticky lg:top-24">
+      {/* Header del Panel */}
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-lg font-semibold text-gray-900">Filtros</h2>
+        <div className="flex items-center space-x-2">
+          {hasActiveFilters && (
             <button
-              onClick={clearAllFilters}
+              onClick={clearFilters}
               className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+              disabled={loading}
             >
-              Clear all
+              Limpiar
+            </button>
+          )}
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="lg:hidden p-1 text-gray-400 hover:text-gray-600"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
           )}
         </div>
+      </div>
 
-        {/* Color Filter */}
-        <div className="mb-6">
-          <h4 className="font-medium text-gray-900 mb-3">Color</h4>
-          <div className="space-y-2">
-            {filterOptions.color.map(option => (
-              <label key={option.value} className="flex items-center cursor-pointer group">
-                <input
-                  type="checkbox"
-                  checked={filters.color.includes(option.value)}
-                  onChange={() => updateFilter('color', option.value)}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <span className="ml-3 text-sm text-gray-700 group-hover:text-gray-900">
-                  {option.icon} {option.label}
-                </span>
-              </label>
-            ))}
-          </div>
-        </div>
+      {/* Filtro ECO */}
+      <div className="mb-6">
+        <label htmlFor="eco" className="block text-sm font-medium text-gray-700 mb-2">
+          Categoría ECO
+        </label>
+        <select
+          id="eco"
+          value={filters.eco}
+          onChange={(e) => handleFilterUpdate('eco', e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+          disabled={loading}
+        >
+          {ecoOptions.map(option => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </div>
 
-        {/* ECO Category Filter */}
-        <div className="mb-6">
-          <h4 className="font-medium text-gray-900 mb-3">ECO Category</h4>
-          <div className="space-y-2">
-            {filterOptions.eco.map(option => (
-              <label key={option.value} className="flex items-center cursor-pointer group">
-                <input
-                  type="checkbox"
-                  checked={filters.eco.includes(option.value)}
-                  onChange={() => updateFilter('eco', option.value)}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <span className="ml-3 text-sm text-gray-700 group-hover:text-gray-900">
-                  {option.label}
-                </span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        {/* Difficulty Filter */}
-        <div className="mb-6">
-          <h4 className="font-medium text-gray-900 mb-3">Difficulty</h4>
-          <div className="space-y-2">
-            {filterOptions.difficulty.map(option => (
-              <label key={option.value} className="flex items-center cursor-pointer group">
-                <input
-                  type="checkbox"
-                  checked={filters.difficulty.includes(option.value)}
-                  onChange={() => updateFilter('difficulty', option.value)}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <span className="ml-3 text-sm text-gray-700 group-hover:text-gray-900">
-                  {option.label}
-                </span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        {/* Popularity Filter */}
-        <div>
-          <h4 className="font-medium text-gray-900 mb-3">Popularity</h4>
-          <div className="space-y-2">
-            {filterOptions.popularity.map(option => (
-              <label key={option.value} className="flex items-center cursor-pointer group">
-                <input
-                  type="checkbox"
-                  checked={filters.popularity.includes(option.value)}
-                  onChange={() => updateFilter('popularity', option.value)}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <span className="ml-3 text-sm text-gray-700 group-hover:text-gray-900">
-                  {option.label}
-                </span>
-              </label>
-            ))}
-          </div>
+      {/* Filtro Color */}
+      <div className="mb-6">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Color
+        </label>
+        <div className="space-y-2">
+          {colorOptions.map(option => (
+            <label key={option.value} className="flex items-center">
+              <input
+                type="radio"
+                name="color"
+                value={option.value}
+                checked={filters.color === option.value}
+                onChange={(e) => handleFilterUpdate('color', e.target.value)}
+                className="text-blue-600 focus:ring-blue-500"
+                disabled={loading}
+              />
+              <span className="ml-2 text-sm text-gray-700">{option.label}</span>
+            </label>
+          ))}
         </div>
       </div>
-    </>
+
+      {/* Filtro Dificultad */}
+      <div className="mb-6">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Dificultad
+        </label>
+        <div className="space-y-2">
+          {difficultyOptions.map(option => (
+            <label key={option.value} className="flex items-center">
+              <input
+                type="radio"
+                name="difficulty"
+                value={option.value}
+                checked={filters.difficulty === option.value}
+                onChange={(e) => handleFilterUpdate('difficulty', e.target.value)}
+                className="text-blue-600 focus:ring-blue-500"
+                disabled={loading}
+              />
+              <span className="ml-2 text-sm text-gray-700">{option.label}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {/* Filtro Popularidad */}
+      <div className="mb-2">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Popularidad
+        </label>
+        <div className="space-y-2">
+          {popularityOptions.map(option => (
+            <label key={option.value} className="flex items-center">
+              <input
+                type="radio"
+                name="popularity"
+                value={option.value}
+                checked={filters.popularity === option.value}
+                onChange={(e) => handleFilterUpdate('popularity', e.target.value)}
+                className="text-blue-600 focus:ring-blue-500"
+                disabled={loading}
+              />
+              <span className="ml-2 text-sm text-gray-700">{option.label}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+    </div>
   )
 }
-
-export default FilterPanel
