@@ -1,7 +1,7 @@
 // app/practice/[id]/page.tsx
 import { notFound } from 'next/navigation'
 import { getOpening } from '../../lib/actions'
-import PracticeClient from './practiceClient'
+import PracticeClient from '../components/practiceClient'
 
 
 interface PageProps {

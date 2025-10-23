@@ -6,6 +6,7 @@ import { useChessStore } from '../stores/useChessStore'
 import SearchHeader from './components/searchHeader'
 import FilterPanel from './components/filterPanel'
 import OpeningGrid from './components/openingGrid'
+import { fetchOpenings } from './utils/fetchOpenings'
 
 
 interface Opening {
@@ -52,7 +53,6 @@ export default function ExplorePage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [pagination, setPagination] = useState<any>(null)
 
-  const { fetchOpenings } = useChessStore()
 
   // ✅ Cargar aperturas desde la API
   useEffect(() => {
@@ -95,7 +95,7 @@ export default function ExplorePage() {
     }
 
     loadOpenings()
-  }, [filters.search, filters.eco, currentPage, fetchOpenings])
+  }, [filters.search, filters.eco, currentPage])
 
   // ✅ Filtrado local adicional
   useEffect(() => {

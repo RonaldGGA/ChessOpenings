@@ -28,7 +28,7 @@
     ".next/types/**/*.ts",
     "**/*.ts",
     "**/*.tsx"
-  ],
+, "public/stockfish/stockfish.wasm.js"  ],
   "exclude": [
     "node_modules"
   ]

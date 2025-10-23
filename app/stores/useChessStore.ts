@@ -1,236 +1,176 @@
-// stores/useChessStore.ts - VERSIÓN CORREGIDA
-import { create } from 'zustand';
-import { Chess } from 'chess.js';
+// stores/useChessStore.ts
+import { create } from 'zustand'
+import { Chess, Square } from 'chess.js'
 
-export interface PracticeStats {
-  correctMoves: number;
-  totalMoves: number;
-  currentStreak: number;
-  bestStreak: number;
-  bestScore: number; // ✅ Agregado
+interface PracticeStats {
+  correctMoves: number
+  totalMoves: number
+  currentStreak: number
+  bestStreak: number
+  accuracy: number
 }
 
-export interface MoveRecommendation {
-  san: string;
-  wins: number;
-  total: number;
-  accuracy: number;
-  evaluation?: number;
+interface MoveRecommendation {
+  san: string
+  accuracy: number
+  wins: number
+  total: number
 }
 
-export interface Opening {
-  id: string;
-  eco: string;
-  name: string;
-  moves: string[];
-  description?: string;
-  whiteWins: number;
-  blackWins: number;
-  draws: number;
-  totalGames: number;
-  popularity: number;
-  initialFen?: string;
+interface GameStatus {
+  isCheck: boolean
+  isCheckmate: boolean
+  isStalemate: boolean
+  isDraw: boolean
+  isGameOver: boolean
+  result?: '1-0' | '0-1' | '1/2-1/2'
 }
 
 interface ChessState {
   // Estado del juego
-  game: Chess;
-  currentFEN: string;
-  moveHistory: string[];
+  game: Chess
+  currentFEN: string
+  isCorrect: boolean | null
+  recommendedMoves: MoveRecommendation[]
+  gameStatus: GameStatus
+  moveHistory: string[]
   
-  // Estado de práctica
-  currentOpening: Opening | null;
-  recommendedMoves: MoveRecommendation[];
-  userMoveHistory: string[];
-  isCorrect: boolean | null;
-  practiceStats: PracticeStats;
+  // Estadísticas de práctica
+  practiceStats: PracticeStats
+  
+  // Apertura actual
+  currentOpening: any | null
   
   // Actions
-  initializePractice: (openingData: Opening) => void;
-  makeMove: (move: string) => boolean;
-  getRecommendations: (fen: string) => MoveRecommendation[];
-  resetPractice: () => void;
-  undoMove: () => void;
-  getPracticeAccuracy: () => number;
-  
-  // API Actions
-  fetchOpening: (id: string) => Promise<Opening | null>;
-  fetchOpenings: (filters?: any) => Promise<{ openings: Opening[]; pagination: any }>;
-  updateProgress: (openingId: string, stats: PracticeStats) => Promise<void>;
+  initializePractice: (opening: any) => void
+  makeMove: (move: string) => boolean
+  resetPractice: () => void
+  getGameStatus: () => GameStatus
+  getValidMoves: (square: string) => string[]
 }
 
 export const useChessStore = create<ChessState>((set, get) => ({
-  // Estado inicial
   game: new Chess(),
   currentFEN: 'start',
-  moveHistory: [],
-  currentOpening: null,
-  recommendedMoves: [],
-  userMoveHistory: [],
   isCorrect: null,
+  recommendedMoves: [],
+  gameStatus: {
+    isCheck: false,
+    isCheckmate: false,
+    isStalemate: false,
+    isDraw: false,
+    isGameOver: false
+  },
+  moveHistory: [],
   practiceStats: {
     correctMoves: 0,
     totalMoves: 0,
     currentStreak: 0,
     bestStreak: 0,
-    bestScore: 0, // ✅ Inicializado
+    accuracy: 0
   },
+  currentOpening: null,
 
-  // Actions
-  initializePractice: (openingData: Opening) => {
-    const game = new Chess();
-    set({
+  initializePractice: (opening) => {
+    const game = new Chess()
+    const initialFEN = opening.initialFen || 'start'
+    
+    if (initialFEN !== 'start') {
+      try {
+        game.load(initialFEN)
+      } catch (error) {
+        console.error('Error loading FEN:', error)
+      }
+    }
+
+    set({ 
       game,
       currentFEN: game.fen(),
-      currentOpening: openingData,
+      currentOpening: opening,
+      isCorrect: null,
+      gameStatus: get().getGameStatus(),
       moveHistory: [],
-      userMoveHistory: [],
-      recommendedMoves: get().getRecommendations(game.fen()),
       practiceStats: {
         correctMoves: 0,
         totalMoves: 0,
         currentStreak: 0,
         bestStreak: 0,
-        bestScore: 0, // ✅ Inicializado
-      },
-      isCorrect: null,
-    });
+        accuracy: 0
+      }
+    })
   },
 
-  makeMove: (move: string) => {
-    const { game, currentOpening, practiceStats } = get();
+  makeMove: (move: string): boolean => {
+    const { game, practiceStats } = get()
     
     try {
-      const result = game.move(move);
-      if (!result) return false;
+      // Intentar hacer el movimiento
+      const result = game.move(move)
+      
+      if (result) {
+        const isCorrectMove = true // Aquí integrarías la validación contra la apertura
+        
+        // Actualizar estadísticas
+        const newStats = {
+          ...practiceStats,
+          totalMoves: practiceStats.totalMoves + 1,
+          correctMoves: practiceStats.correctMoves + (isCorrectMove ? 1 : 0),
+          currentStreak: isCorrectMove ? practiceStats.currentStreak + 1 : 0,
+          bestStreak: isCorrectMove 
+            ? Math.max(practiceStats.bestStreak, practiceStats.currentStreak + 1)
+            : practiceStats.bestStreak,
+          accuracy: practiceStats.totalMoves > 0 
+            ? Math.round((practiceStats.correctMoves + (isCorrectMove ? 1 : 0)) / (practiceStats.totalMoves + 1) * 100)
+            : (isCorrectMove ? 100 : 0)
+        }
 
-      const newFEN = game.fen();
-      const recommendations = get().getRecommendations(newFEN);
-      const isMoveCorrect = recommendations.some(rec => rec.san === move);
+        // Obtener nuevo estado del juego
+        const gameStatus = get().getGameStatus()
+        const moveHistory = [...get().moveHistory, result.san]
 
-      // ✅ CÁLCULO CORRECTO DE bestScore
-      const currentCorrectMoves = practiceStats.correctMoves + (isMoveCorrect ? 1 : 0);
-      const newBestScore = Math.max(practiceStats.bestScore, currentCorrectMoves);
+        set({
+          game: new Chess(game.fen()), // Nueva instancia para reactividad
+          currentFEN: game.fen(),
+          isCorrect: isCorrectMove,
+          practiceStats: newStats,
+          gameStatus,
+          moveHistory
+        })
 
-      // Actualizar estadísticas
-      const newStats: PracticeStats = {
-        correctMoves: currentCorrectMoves,
-        totalMoves: practiceStats.totalMoves + 1,
-        currentStreak: isMoveCorrect ? practiceStats.currentStreak + 1 : 0,
-        bestStreak: Math.max(
-          practiceStats.bestStreak,
-          isMoveCorrect ? practiceStats.currentStreak + 1 : 0
-        ),
-        bestScore: newBestScore, // ✅ Usando el nuevo cálculo
-      };
-
-      set({
-        game: new Chess(newFEN),
-        currentFEN: newFEN,
-        moveHistory: [...get().moveHistory, move],
-        userMoveHistory: [...get().userMoveHistory, move],
-        recommendedMoves: recommendations,
-        isCorrect: isMoveCorrect,
-        practiceStats: newStats,
-      });
-
-      return true;
+        return true
+      }
     } catch (error) {
-      console.error('Movimiento inválido:', error);
-      return false;
+      console.error('Movimiento inválido:', error)
     }
-  },
-
-  getRecommendations: (fen: string): MoveRecommendation[] => {
-    const { currentOpening, game } = get();
-    if (!currentOpening) return [];
-
-    const possibleMoves = game.moves();
     
-    return possibleMoves.slice(0, 3).map((move, index) => ({
-      san: move,
-      wins: Math.floor(Math.random() * 100) + 50,
-      total: 100,
-      accuracy: 75 + index * 5,
-    }));
+    return false
   },
 
   resetPractice: () => {
-    const { currentOpening } = get();
-    if (currentOpening) {
-      get().initializePractice(currentOpening);
+    const { currentOpening } = get()
+    get().initializePractice(currentOpening)
+  },
+
+  getGameStatus: () => {
+    const { game } = get()
+    return {
+      isCheck: game.isCheck(),
+      isCheckmate: game.isCheckmate(),
+      isStalemate: game.isStalemate(),
+      isDraw: game.isDraw(),
+      isGameOver: game.isGameOver(),
+      result: game.isCheckmate() 
+        ? (game.turn() === 'w' ? '0-1' : '1-0')
+        : game.isDraw() ? '1/2-1/2' : undefined
     }
   },
 
-  undoMove: () => {
-    const { game, moveHistory } = get();
-    if (moveHistory.length === 0) return;
-
-    game.undo();
-    const newMoveHistory = moveHistory.slice(0, -1);
-    const newFEN = game.fen();
-
-    set({
-      game: new Chess(newFEN),
-      currentFEN: newFEN,
-      moveHistory: newMoveHistory,
-      recommendedMoves: get().getRecommendations(newFEN),
-      isCorrect: null,
-    });
-  },
-
-  getPracticeAccuracy: () => {
-    const { practiceStats } = get();
-    if (practiceStats.totalMoves === 0) return 0;
-    return Math.round((practiceStats.correctMoves / practiceStats.totalMoves) * 100);
-  },
-
-  // API Actions
-  fetchOpening: async (id: string): Promise<Opening | null> => {
+  getValidMoves: (square: Square) => {
+    const { game } = get()
     try {
-      const response = await fetch(`/api/openings/${id}`);
-      if (!response.ok) throw new Error('Failed to fetch opening');
-      return await response.json();
+      return game.moves({ square, verbose: true }).map(move => move.to)
     } catch (error) {
-      console.error('Error fetching opening:', error);
-      return null;
-    }
-  },
-
-  fetchOpenings: async (filters = {}): Promise<{ openings: Opening[]; pagination: any }> => {
-    try {
-      const params = new URLSearchParams();
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value) params.append(key, String(value));
-      });
-      
-      const response = await fetch(`/api/openings?${params}`);
-      if (!response.ok) throw new Error('Failed to fetch openings');
-      return await response.json();
-    } catch (error) {
-      console.error('Error fetching openings:', error);
-      return { openings: [], pagination: {} };
-    }
-  },
-
-  updateProgress: async (openingId: string, stats: PracticeStats): Promise<void> => {
-    try {
-      const response = await fetch('/api/practice/progress', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          openingId,
-          correctMoves: stats.correctMoves,
-          totalMoves: stats.totalMoves,
-          bestScore: stats.bestScore // ✅ Ahora bestScore existe en stats
-        })
-      });
-
-      if (!response.ok) throw new Error('Failed to update progress');
-    } catch (error) {
-      console.error('Error updating progress:', error);
+      return []
     }
   }
-}));
+}))
