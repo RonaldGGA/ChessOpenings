@@ -1,143 +1,190 @@
 // components/OpeningCard.tsx
-import { ExternalLink } from 'lucide-react';
-import { Opening } from '../explore/page';
-;
+"use client";
+
+import { MouseEventHandler, useState } from "react";
+import { signIn, useSession } from "next-auth/react";
+import { Heart, Star, Eye } from "lucide-react";
+import { Opening } from "../explore/page";
 
 interface OpeningCardProps {
   opening: Opening;
-  viewMode: 'grid' | 'list';
+  viewMode: "grid" | "list";
   onClick: (openingId: string) => void;
+  isFavorite?: boolean;
+  visitCount?: number;
+  onToggleFavorite?: (openingId: string, isFavorite: boolean) => void;
 }
 
-const OpeningCard: React.FC<OpeningCardProps> = ({ opening, viewMode, onClick }) => {
-  if (viewMode === 'list') {
+const OpeningCard = ({
+  opening,
+  viewMode,
+  onClick,
+  isFavorite = false,
+  visitCount = 0,
+  onToggleFavorite,
+}: OpeningCardProps) => {
+  const { data: session } = useSession();
+  const [isFav, setIsFav] = useState(isFavorite);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleFavoriteClick = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!session) {
+      signIn();
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const newFavoriteState = !isFav;
+      setIsFav(newFavoriteState);
+
+      // Llamar a la API para actualizar favoritos
+      const response = await fetch("/api/user/favorites", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          openingId: opening.id,
+          action: newFavoriteState ? "add" : "remove",
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update favorite");
+      }
+
+      // Notificar al componente padre
+      onToggleFavorite?.(opening.id, newFavoriteState);
+    } catch (error) {
+      console.error("Error updating favorite:", error);
+      setIsFav(!isFav); // Revertir en caso de error
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCardClick = async (e: { stopPropagation: () => void; }) => {
+    e.stopPropagation();
+    // Registrar visita si el usuario está autenticado
+    if (session) {
+      try {
+        await fetch("/api/user/visits", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ openingId: opening.id }),
+        });
+      } catch (error) {
+        console.error("Error recording visit:", error);
+      }
+    }
+
+    onClick(opening.id);
+  };
+
+  if (viewMode === "grid") {
     return (
       <div
-        onClick={() => onClick(opening.id)}
-        className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 border border-slate-700 hover:border-yellow-500/50 hover:shadow-2xl hover:shadow-yellow-500/10 transition-all duration-300 cursor-pointer group"
+        onClick={handleCardClick}
+        className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 border border-slate-700 hover:border-yellow-500/50 transition-all duration-300 cursor-pointer group hover:bg-slate-700/30"
       >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4 flex-1">
-            {/* ECO Badge and Basic Info */}
-            <div className="flex items-center space-x-4 min-w-0 flex-1">
-              <div className="shrink-0">
-                <span className="inline-block px-3 py-1 bg-yellow-500 text-slate-900 text-sm font-semibold rounded-full">
-                  {opening.eco}
-                </span>
-              </div>
-              
-              <div className="min-w-0 flex-1">
-                <h3 className="font-bold text-lg text-white group-hover:text-yellow-400 transition-colors truncate">
-                  {opening.name}
-                </h3>
-                <p className="text-sm text-gray-400 truncate">
-                  {opening.moves}
-                </p>
-              </div>
-            </div>
+        {/* Header con ECO y Botón de Favorito */}
+        <div className="flex justify-between items-start mb-3">
+          <span className="bg-yellow-500 text-slate-900 px-2 py-1 rounded-lg text-xs font-bold">
+            {opening.eco}
+          </span>
+          {session && (
+            <button
+              onClick={handleFavoriteClick}
+              disabled={isLoading}
+              className={`p-2 rounded-xl transition-all duration-200 ${
+                isFav
+                  ? "bg-red-500/20 text-red-400 border border-red-500/30"
+                  : "bg-slate-700/50 text-gray-400 border border-slate-600 hover:border-red-500/50 hover:text-red-400"
+              } ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+            >
+              <Heart className={`h-4 w-4 ${isFav ? "fill-current" : ""}`} />
+            </button>
+          )}
+        </div>
 
-            {/* Additional Info */}
-            <div className="hidden md:flex items-center space-x-6 text-sm text-gray-400 flex-shrink-0">
-              <span>Source: {opening.src}</span>
-              {opening.scid && <span>SCID: {opening.scid}</span>}
-              {opening.isEcoRoot && (
-                <span className="inline-block px-2 py-1 bg-green-500/20 text-green-400 text-xs font-medium rounded-full border border-green-500/30">
-                  ECO Root
-                </span>
-              )}
-            </div>
+        {/* Nombre de la Apertura */}
+        <h3 className="text-white font-semibold mb-2 group-hover:text-yellow-400 transition-colors line-clamp-2">
+          {opening.name}
+        </h3>
 
-            {/* Aliases (truncated) */}
-            {opening.aliases.length > 0 && (
-              <div className="hidden lg:block shrink-0">
-                <div className="flex items-center space-x-2">
-                  <span className="text-xs text-gray-500">Also:</span>
-                  <span className="text-xs text-gray-400 truncate max-w-xs">
-                    {opening.aliases[0].value}
-                    {opening.aliases.length > 1 && ` +${opening.aliases.length - 1} more`}
-                  </span>
-                </div>
-              </div>
-            )}
+        {/* Movimientos */}
+        <p className="text-gray-400 text-sm font-mono mb-4 line-clamp-2">
+          {opening.moves}
+        </p>
+
+        {/* Footer con Estadísticas */}
+        <div className="flex items-center justify-between text-xs text-gray-500">
+          <div className="flex items-center space-x-1">
+            <Eye className="h-3 w-3" />
+            <span>{visitCount}</span>
           </div>
-
-          {/* CTA */}
-          <div className="flex items-center space-x-4 shrink-0 ml-4">
-            <span className="text-yellow-400 text-sm font-medium group-hover:underline flex items-center">
-              Practice
-              <ExternalLink className="h-3 w-3 ml-1" />
-            </span>
+          <div className="flex items-center space-x-1">
+            <Star className="h-3 w-3" />
+            <span>{opening.totalFavorites || 0}</span>
           </div>
         </div>
       </div>
     );
   }
 
-  // Default grid view
+  // Vista de lista
   return (
     <div
-      onClick={() => onClick(opening.id)}
-      className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 border border-slate-700 hover:border-yellow-500/50 hover:shadow-2xl hover:shadow-yellow-500/10 transition-all duration-300 cursor-pointer group h-full flex flex-col"
+      onClick={handleCardClick}
+      className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 border border-slate-700 hover:border-yellow-500/50 transition-all duration-300 cursor-pointer group hover:bg-slate-700/30"
     >
-      {/* ECO Badge */}
-      <div className="flex items-center justify-between mb-3">
-        <span className="inline-block px-3 py-1 bg-yellow-500 text-slate-900 text-sm font-semibold rounded-full">
-          {opening.eco}
-        </span>
-        {opening.isEcoRoot && (
-          <span className="inline-block px-2 py-1 bg-green-500/20 text-green-400 text-xs font-medium rounded-full border border-green-500/30">
-            ECO Root
-          </span>
-        )}
-      </div>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4 flex-1">
+          {/* ECO Code */}
+          <div className="bg-yellow-500 text-slate-900 px-3 py-1 rounded-lg text-sm font-bold min-w-16 text-center">
+            {opening.eco}
+          </div>
 
-      {/* Opening Name */}
-      <h3 className="font-bold text-lg mb-2 text-white group-hover:text-yellow-400 transition-colors line-clamp-2 flex-1">
-        {opening.name}
-      </h3>
+          {/* Información de la Apertura */}
+          <div className="flex-1 min-w-0">
+            <h3 className="text-white font-semibold group-hover:text-yellow-400 transition-colors truncate">
+              {opening.name}
+            </h3>
+            <p className="text-gray-400 text-sm font-mono truncate">
+              {opening.moves}
+            </p>
+          </div>
 
-      {/* Moves */}
-      <div className="mb-3">
-        <p className="text-sm text-gray-400 mb-1">Moves:</p>
-        <p className="text-sm font-mono text-gray-300 bg-slate-700/30 rounded-lg p-2 border border-slate-600">
-          {opening.moves}
-        </p>
-      </div>
-
-      {/* Source */}
-      <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
-        <span>Source: {opening.src}</span>
-        {opening.scid && <span>SCID: {opening.scid}</span>}
-      </div>
-
-      {/* Aliases */}
-      {opening.aliases.length > 0 && (
-        <div className="border-t border-slate-700 pt-3 mt-auto">
-          <p className="text-xs text-gray-400 mb-2">Also known as:</p>
-          <div className="flex flex-wrap gap-1">
-            {opening.aliases.slice(0, 2).map(alias => (
-              <span
-                key={alias.id}
-                className="inline-block px-2 py-1 bg-slate-700/30 text-gray-300 text-xs rounded-md border border-slate-600"
-              >
-                {alias.value}
-              </span>
-            ))}
-            {opening.aliases.length > 2 && (
-              <span className="inline-block px-2 py-1 bg-slate-700/30 text-gray-400 text-xs rounded-md">
-                +{opening.aliases.length - 2} more
-              </span>
-            )}
+          {/* Estadísticas */}
+          <div className="flex items-center space-x-4 text-sm text-gray-400">
+            <div className="flex items-center space-x-1">
+              <Eye className="h-4 w-4" />
+              <span>{visitCount}</span>
+            </div>
+            <div className="flex items-center space-x-1">
+              <Star className="h-4 w-4" />
+              <span>{opening.totalFavorites || 0}</span>
+            </div>
           </div>
         </div>
-      )}
 
-      {/* View Details CTA */}
-      <div className="flex items-center justify-end mt-4 pt-3 border-t border-slate-700">
-        <span className="text-yellow-400 text-sm font-medium group-hover:underline flex items-center">
-          Practice Opening
-          <ExternalLink className="h-3 w-3 ml-1" />
-        </span>
+        {/* Botón de Favorito */}
+
+        <button
+          onClick={handleFavoriteClick}
+          disabled={isLoading}
+          className={`cursor-pointer ml-4 p-3 rounded-xl transition-all duration-200 ${
+            isFav
+              ? "bg-red-500/20 text-red-400 border border-red-500/30"
+              : "bg-slate-700/50 text-gray-400 border border-slate-600 hover:border-red-500/50 hover:text-red-400"
+          } ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+        >
+          <Heart className={`h-5 w-5 ${isFav ? "fill-current" : ""}`} />
+        </button>
       </div>
     </div>
   );

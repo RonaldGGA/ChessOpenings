@@ -1,7 +1,7 @@
 // app/auth/newuser/page.tsx
 "use client"
 
-import { useEffect, useState, Suspense } from 'react'
+import { useEffect, useState, Suspense, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { signIn, useSession } from 'next-auth/react'
 import Link from 'next/link'
@@ -12,7 +12,7 @@ function NewUserForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get('callbackUrl') || '/'
-  const { data: session, status } = useSession()
+  const { data: session } = useSession()
   
   const [formData, setFormData] = useState({
     name: '',
@@ -26,9 +26,17 @@ function NewUserForm() {
   const [error, setError] = useState('')
 
   // Handle redirection if already logged in
+    const handleRedirection = useCallback(() =>{
+    if(session?.user){
+      router.push(callbackUrl ? callbackUrl : '/')
+    }
+  }, [session, router, callbackUrl])
+
   useEffect(()=>{
-     session?.user && router.push(callbackUrl ? callbackUrl : '/')
-  },[session, router, callbackUrl])
+    handleRedirection()
+  },[session, router, callbackUrl, handleRedirection])
+
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({

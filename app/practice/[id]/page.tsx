@@ -16,7 +16,6 @@ export type OpeningWithRelations = Opening & {
 
 export default async function PracticePage({ params }: PageProps) {
   const { id } = await params;
-  console.log("ID: " + id)
 
   const { opening, variations } = await findOpening(id);
 

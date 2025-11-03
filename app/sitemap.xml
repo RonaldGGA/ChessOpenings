@@ -1,0 +1,79 @@
+// app/sitemap.ts
+import { MetadataRoute } from 'next';
+import prisma from '@/lib/prisma';
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://chess-openings-indol.vercel.app';
+
+  // URLs estáticas principales
+  const staticRoutes: MetadataRoute.Sitemap = [
+    {
+      url: baseUrl,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 1.0,
+    },
+    {
+      url: `${baseUrl}/free-practice`,
+      lastModified: new Date(),
+      changeFrequency: 'daily',
+      priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/explore`,
+      lastModified: new Date(),
+      changeFrequency: 'daily',
+      priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/dashboard`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/about`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.5,
+    },
+    {
+      url: `${baseUrl}/features`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.5,
+    },
+    {
+      url: `${baseUrl}/contact`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.3,
+    },
+  ];
+
+  // URLs dinámicas de aperturas de ajedrez
+  let dynamicOpeningRoutes: MetadataRoute.Sitemap = [];
+  
+  try {
+    const openings = await prisma.opening.findMany({
+      select: {
+        id: true,
+        updatedAt: true,
+        name: true,
+        eco: true,
+      },
+      take: 1000, // Límite para no sobrecargar el sitemap
+    });
+
+    dynamicOpeningRoutes = openings.map((opening) => ({
+      url: `${baseUrl}/practice/${opening.id}`,
+      lastModified: opening.updatedAt,
+      changeFrequency: 'weekly' as const,
+      priority: 0.7,
+    }));
+  } catch (error) {
+    console.error('Error fetching openings for sitemap:', error);
+  }
+
+  return [...staticRoutes, ...dynamicOpeningRoutes];
+}

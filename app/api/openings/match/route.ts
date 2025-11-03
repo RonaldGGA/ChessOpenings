@@ -31,10 +31,6 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   console.log('Starting /api/openings/match request');
   
   try {
-    // // Verificar la conexión a la base de datos
-    // await prisma.$queryRaw`SELECT 1`
-    // console.log('Database connection verified');
-    
     const { searchParams } = new URL(request.url)
     console.log('Search params:', Object.fromEntries(searchParams));
     
@@ -54,7 +50,6 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         console.error('Invalid moveHistory format: not an array');
         throw new Error('moveHistory debe ser un array');
       }
-      console.log('Parsed moves:', movesArray);
     } catch (error) {
       console.error('Error parsing moveHistory:', error);
       return NextResponse.json(

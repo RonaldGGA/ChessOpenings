@@ -1,173 +1,265 @@
-// prisma/seed.ts
-import { PrismaClient } from '@/app/generated/prisma/client';
+// scripts/seedDatabase.ts
+import { PrismaClient } from '../app/generated/prisma/client';
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
 
 async function main() {
-  console.log('🌱 Iniciando seed de base de datos...')
+  console.log('🌱 Starting database seed...');
 
-  // Limpiar datos existentes (opcional - solo para desarrollo)
-  console.log('🧹 Limpiando datos existentes...')
-  await prisma.userFavorite.deleteMany()
-  await prisma.openingVisit.deleteMany()
-  await prisma.session.deleteMany()
-  await prisma.account.deleteMany()
-  await prisma.user.deleteMany()
-
-  // Crear usuarios de prueba
-  console.log('👤 Creando usuarios de prueba...')
-
-  const user1 = await prisma.user.create({
-    data: {
-      name: 'Carlos Martínez',
-      email: 'carlos.martinez@email.com',
-      emailVerified: new Date(),
-      image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
-      password: '$2b$10$EXAMPLE_HASHED_PASSWORD_123', // En producción, usa bcrypt
+  // 1. Crear un usuario de ejemplo
+  console.log('Creating demo user...');
+  const user = await prisma.user.upsert({
+    where: { email: 'demo@chessmaster.com' },
+    update: {},
+    create: {
+      email: 'demo@chessmaster.com',
+      name: 'Demo Chess Player',
+      password: '$2b$10$K7L1OJ45/4Y2nIvhRVpCe.FSmhDdWoXehVzJptJ/op0lSsvq.7dGq', // "password"
+      preferredDepth: 15,
+      showBestMoveArrow: true,
+      showPonderArrow: true,
+      defaultBoardOrientation: 'white',
     },
-  })
+  });
+  console.log(`✅ User created: ${user.email}`);
 
-  const user2 = await prisma.user.create({
-    data: {
-      name: 'Ana Rodríguez',
-      email: 'ana.rodriguez@email.com',
-      emailVerified: new Date(),
-      image: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face',
-      password: '$2b$10$EXAMPLE_HASHED_PASSWORD_456',
+  // 2. Obtener algunas aperturas existentes para trabajar con ellas
+  console.log('Finding existing openings...');
+  const existingOpenings = await prisma.opening.findMany({
+    take: 10,
+    orderBy: { eco: 'asc' },
+  });
+
+  if (existingOpenings.length === 0) {
+    console.log('❌ No existing openings found. Please run the openings migration first.');
+    return;
+  }
+
+  console.log(`✅ Found ${existingOpenings.length} existing openings`);
+
+  // 3. Crear favoritos para el usuario
+  console.log('Creating user favorites...');
+  const favoriteOpenings = existingOpenings.slice(0, 3);
+  
+  for (const opening of favoriteOpenings) {
+    await prisma.userFavorite.upsert({
+      where: {
+        userId_openingId: {
+          userId: user.id,
+          openingId: opening.id,
+        },
+      },
+      update: {},
+      create: {
+        userId: user.id,
+        openingId: opening.id,
+      },
+    });
+
+    // Actualizar contador de favoritos en la apertura
+    await prisma.opening.update({
+      where: { id: opening.id },
+      data: {
+        totalFavorites: { increment: 1 },
+      },
+    });
+  }
+  console.log(`✅ Created ${favoriteOpenings.length} favorites`);
+
+  // 4. Crear visitas a aperturas
+  console.log('Creating opening visits...');
+  const visitedOpenings = existingOpenings.slice(0, 5);
+  
+  for (const opening of visitedOpenings) {
+    await prisma.openingVisit.upsert({
+      where: {
+        userId_openingId: {
+          userId: user.id,
+          openingId: opening.id,
+        },
+      },
+      update: {
+        count: { increment: 1 },
+        visitedAt: new Date(),
+      },
+      create: {
+        userId: user.id,
+        openingId: opening.id,
+        count: 1,
+        visitedAt: new Date(),
+      },
+    });
+
+    // Actualizar contador de visitas en la apertura
+    await prisma.opening.update({
+      where: { id: opening.id },
+      data: {
+        totalVisits: { increment: 1 },
+      },
+    });
+  }
+  console.log(`✅ Created ${visitedOpenings.length} visits`);
+
+  // 5. Crear sesiones de práctica realistas
+  console.log('Creating practice sessions...');
+  
+  const practiceSessions = [
+    {
+      openingId: existingOpenings[0].id,
+      moves: '1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Be7 6. Re1 b5 7. Bb3 d6 8. c3 O-O 9. h3 Nb8 10. d4 Nbd7',
+      finalFen: 'r1bq1rk1/pppn1ppp/3p1n2/1B2p3/3PP3/5N2/PPP2PPP/RNBQ1RK1 b - - 0 10',
+      movesCount: 10,
     },
-  })
-
-  const user3 = await prisma.user.create({
-    data: {
-      name: 'David Chen',
-      email: 'david.chen@email.com',
-      emailVerified: new Date(),
-      image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
-      password: '$2b$10$EXAMPLE_HASHED_PASSWORD_789',
+    {
+      openingId: existingOpenings[1].id,
+      moves: '1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4 d6 5. f3 O-O 6. Be3 e5 7. d5 c6',
+      finalFen: 'rnbq1rk1/pp2ppbp/2pp1np1/3P4/2P1P3/2N1B3/PP3PPP/R2QKBNR w KQ - 0 8',
+      movesCount: 7,
     },
-  })
-
-  console.log('✅ Usuarios creados:')
-  console.log(`   👤 ${user1.name} - ${user1.email}`)
-  console.log(`   👤 ${user2.name} - ${user2.email}`)
-  console.log(`   👤 ${user3.name} - ${user3.email}`)
-
-  // Crear algunos openings básicos para poder hacer favoritos y visitas
-  console.log('♟️ Creando openings de ejemplo...')
-
-  const opening1 = await prisma.opening.create({
-    data: {
-      fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
-      src: 'traditional',
-      eco: 'A00',
-      moves: 'e4 e5 Nf3 Nc6 Bb5',
-      name: 'Apertura Española',
-      isEcoRoot: true,
+    {
+      openingId: null, // Free practice sin apertura específica
+      moves: '1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 a6 6. Be3 e5 7. Nb3 Be6 8. f3 Be7 9. Qd2 O-O',
+      finalFen: 'rnbq1rk1/1p2bppp/p2ppn2/4p3/4P3/1NN5/PPP1BPPP/R2QK2R w KQ - 0 10',
+      movesCount: 9,
     },
-  })
+  ];
 
-  const opening2 = await prisma.opening.create({
-    data: {
-      fen: 'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1',
-      src: 'traditional',
-      eco: 'B20',
-      moves: 'e4 c5 Nf3 d6 d4',
-      name: 'Defensa Siciliana',
-      isEcoRoot: true,
+  for (const sessionData of practiceSessions) {
+    const session = await prisma.practiceSession.create({
+      data: {
+        userId: user.id,
+        openingId: sessionData.openingId,
+        moves: sessionData.moves,
+        finalFen: sessionData.finalFen,
+        movesCount: sessionData.movesCount,
+      },
+    });
+
+    // Si hay openingId, actualizar contador de sesiones de práctica
+    if (sessionData.openingId) {
+      await prisma.opening.update({
+        where: { id: sessionData.openingId },
+        data: {
+          totalPracticeSessions: { increment: 1 },
+        },
+      });
+    }
+
+    console.log(`✅ Created practice session: ${session.movesCount} moves`);
+  }
+
+  // 6. Crear algunas relaciones FromTo de ejemplo
+  console.log('Creating FromTo relationships...');
+  
+  if (existingOpenings.length >= 3) {
+    const fromToRelations = [
+      {
+        fromFen: existingOpenings[0].fen,
+        toFen: existingOpenings[1].fen,
+        fromSrc: existingOpenings[0].src,
+        toSrc: existingOpenings[1].src,
+      },
+      {
+        fromFen: existingOpenings[1].fen,
+        toFen: existingOpenings[2].fen,
+        fromSrc: existingOpenings[1].src,
+        toSrc: existingOpenings[2].src,
+      },
+    ];
+
+    for (const relation of fromToRelations) {
+      try {
+        await prisma.fromTo.create({
+          data: relation,
+        });
+        console.log(`✅ Created FromTo relationship`);
+      } catch (error) {
+        console.log('ℹ️ FromTo relationship already exists or error:', error);
+      }
+    }
+  }
+
+  // 7. Crear aliases de ejemplo para algunas aperturas
+  console.log('Creating aliases...');
+  
+  const aliasesData = [
+    {
+      openingId: existingOpenings[0].id,
+      source: 'scid',
+      value: 'Ruy Lopez Main Line',
     },
-  })
-
-  const opening3 = await prisma.opening.create({
-    data: {
-      fen: 'rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e6 0 2',
-      src: 'traditional',
-      eco: 'C60',
-      moves: 'e4 e5 Nf3 Nc6 Bb5',
-      name: 'Apertura Italiana',
-      isEcoRoot: false,
+    {
+      openingId: existingOpenings[0].id,
+      source: 'eco_wikip',
+      value: 'Spanish Game',
     },
-  })
-
-  // Crear algunos favoritos de ejemplo
-  console.log('❤️ Creando favoritos de ejemplo...')
-
-  await prisma.userFavorite.create({
-    data: {
-      userId: user1.id,
-      openingId: opening1.id,
+    {
+      openingId: existingOpenings[1].id,
+      source: 'scid',
+      value: 'King\'s Indian Defense',
     },
-  })
+  ];
 
-  await prisma.userFavorite.create({
-    data: {
-      userId: user1.id,
-      openingId: opening2.id,
-    },
-  })
+  for (const aliasData of aliasesData) {
+    try {
+      await prisma.alias.upsert({
+        where: {
+          openingId_source_value: {
+            openingId: aliasData.openingId,
+            source: aliasData.source,
+            value: aliasData.value,
+          },
+        },
+        update: {},
+        create: aliasData,
+      });
+      console.log(`✅ Created alias: ${aliasData.source} - ${aliasData.value}`);
+    } catch (error) {
+      console.log('ℹ️ Alias already exists or error:', error);
+    }
+  }
 
-  await prisma.userFavorite.create({
-    data: {
-      userId: user2.id,
-      openingId: opening2.id,
-    },
-  })
+  // 8. Actualizar algunas estadísticas globales en aperturas para que sean más realistas
+  console.log('Updating opening statistics...');
+  
+  for (let i = 0; i < existingOpenings.length; i++) {
+    const opening = existingOpenings[i];
+    
+    // Hacer que las estadísticas sean más realistas
+    const randomVisits = Math.floor(Math.random() * 100) + 10;
+    const randomFavorites = Math.floor(Math.random() * 20) + 1;
+    const randomPracticeSessions = Math.floor(Math.random() * 30) + 5;
 
-  // Crear visitas de ejemplo
-  console.log('📊 Creando historial de visitas...')
+    await prisma.opening.update({
+      where: { id: opening.id },
+      data: {
+        totalVisits: randomVisits,
+        totalFavorites: randomFavorites,
+        totalPracticeSessions: randomPracticeSessions,
+      },
+    });
+  }
 
-  // Carlos visita la Española 3 veces y la Siciliana 1 vez
-  await prisma.openingVisit.create({
-    data: {
-      userId: user1.id,
-      openingId: opening1.id,
-      count: 3,
-      visitedAt: new Date('2024-01-15'),
-    },
-  })
+  console.log('🎉 Database seed completed successfully!');
+  console.log('\n📊 Summary:');
+  console.log(`   - User: ${user.email}`);
+  console.log(`   - Openings: ${existingOpenings.length} referenced`);
+  console.log(`   - Favorites: ${favoriteOpenings.length} created`);
+  console.log(`   - Visits: ${visitedOpenings.length} created`);
+  console.log(`   - Practice Sessions: ${practiceSessions.length} created`);
+  console.log(`   - FromTo relationships: 2 created`);
+  console.log(`   - Aliases: ${aliasesData.length} created`);
 
-  await prisma.openingVisit.create({
-    data: {
-      userId: user1.id,
-      openingId: opening2.id,
-      count: 1,
-      visitedAt: new Date('2024-01-16'),
-    },
-  })
-
-  // Ana visita la Siciliana 2 veces
-  await prisma.openingVisit.create({
-    data: {
-      userId: user2.id,
-      openingId: opening2.id,
-      count: 2,
-      visitedAt: new Date('2024-01-14'),
-    },
-  })
-
-  // David visita la Italiana 1 vez
-  await prisma.openingVisit.create({
-    data: {
-      userId: user3.id,
-      openingId: opening3.id,
-      count: 1,
-      visitedAt: new Date('2024-01-13'),
-    },
-  })
-
-  console.log('🎉 Seed completado exitosamente!')
-  console.log('')
-  console.log('📊 Resumen de datos creados:')
-  console.log('   👥 3 usuarios')
-  console.log('   ♟️ 3 openings')
-  console.log('   ❤️ 3 favoritos')
-  console.log('   📈 4 registros de visitas')
+  console.log('\n🔑 Demo user credentials:');
+  console.log('   Email: demo@chessmaster.com');
+  console.log('   Password: password');
 }
 
 main()
   .catch((e) => {
-    console.error('❌ Error durante el seed:', e)
-    process.exit(1)
+    console.error('❌ Error during seeding:', e);
+    process.exit(1);
   })
   .finally(async () => {
-    await prisma.$disconnect()
-  })
+    await prisma.$disconnect();
+  });

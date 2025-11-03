@@ -1,20 +1,28 @@
-// components/UserProfile.tsx
+// components/UserButton.tsx (actualizado)
 "use client"
 
 import { useSession, signIn, signOut } from 'next-auth/react'
-import { User, LogOut, Settings, ChevronDown } from 'lucide-react'
+import { User, LogOut, ChevronDown } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
+import { MdDashboard } from 'react-icons/md'
 
 export default function UserButton() {
   const { data: session, status } = useSession()
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const buttonRef = useRef<HTMLButtonElement>(null)
 
   // Cerrar dropdown al hacer click fuera
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current && 
+        !dropdownRef.current.contains(event.target as Node) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(event.target as Node)
+      ) {
         setDropdownOpen(false)
       }
     }
@@ -34,9 +42,10 @@ export default function UserButton() {
 
   if (session?.user) {
     return (
-      <div className="relative z-10" ref={dropdownRef}>
+      <div className="relative" ref={dropdownRef}>
         {/* User Avatar and Name */}
         <button
+          ref={buttonRef}
           onClick={() => setDropdownOpen(!dropdownOpen)}
           className="flex items-center space-x-3 bg-slate-700/50 hover:bg-slate-700/70 border border-slate-600 hover:border-yellow-500/50 rounded-xl px-4 py-2 transition-all duration-300 group"
         >
@@ -73,9 +82,9 @@ export default function UserButton() {
           }`} />
         </button>
 
-        {/* Dropdown Menu */}
+        {/* Dropdown Menu - Aseguramos que esté por encima de todo */}
         {dropdownOpen && (
-          <div className=" absolute right-0 top-full mt-2 w-64 bg-slate-800/95 backdrop-blur-sm rounded-2xl border border-slate-700 shadow-2xl shadow-black/50 z-50 overflow-hidden">
+          <div className="absolute top-full right-0 mt-2 w-64 bg-slate-800/95 backdrop-blur-sm rounded-2xl border border-slate-700 shadow-2xl shadow-black/50 z-100 overflow-hidden">
             {/* User Info Section */}
             <div className="p-4 border-b border-slate-700">
               <div className="flex items-center space-x-3">
@@ -105,17 +114,18 @@ export default function UserButton() {
             </div>
 
             {/* Menu Items */}
-            <div className="p-2 ">
-              <button
+            <div className="p-2">
+              <Link
+              href="/dashboard"
                 onClick={() => {
                   setDropdownOpen(false)
                   // Aquí puedes redirigir a la página de perfil
                 }}
                 className="flex items-center space-x-3 w-full px-3 py-2 text-sm text-gray-300 hover:text-yellow-400 hover:bg-slate-700/50 rounded-lg transition-all duration-200"
               >
-                <Settings className="h-4 w-4" />
-                <span>Profile Settings</span>
-              </button>
+                <MdDashboard className="h-4 w-4" />
+                <span>Dashboard</span>
+              </Link>
             </div>
 
             {/* Sign Out Button */}

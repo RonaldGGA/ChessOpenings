@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client"
   output   = "../app/generated/prisma"
@@ -14,7 +8,6 @@ datasource db {
   url      = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
-
 
 model Account {
   id                String  @id @default(cuid())
@@ -55,7 +48,14 @@ model User {
   favorites     UserFavorite[]
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-  visits OpeningVisit[]
+  visits        OpeningVisit[]
+  practiceSessions PracticeSession[]
+  
+  // Preferencias del usuario
+  preferredDepth    Int     @default(13)
+  showBestMoveArrow Boolean @default(true)
+  showPonderArrow   Boolean @default(true)
+  defaultBoardOrientation String @default("white") // 'white' or 'black'
 }
 
 model Opening {
@@ -74,7 +74,12 @@ model Opening {
   toTransitions   FromTo[] @relation("ToOpening")
   UserFavorite UserFavorite[]
   visits OpeningVisit[]
-
+  practiceSessions PracticeSession[]
+  
+  // Estadísticas (para ordenamiento)
+  totalVisits Int @default(0)
+  totalFavorites Int @default(0)
+  totalPracticeSessions Int @default(0)
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -82,6 +87,8 @@ model Opening {
   @@index([eco])
   @@index([src])
   @@index([fen])
+  @@index([totalVisits])
+  @@index([totalFavorites])
 }
 
 model Alias {
@@ -115,13 +122,15 @@ model FromTo {
 
 model UserFavorite {
   id        String   @id @default(cuid())
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    String
-  opening   Opening  @relation(fields: [openingId], references: [id])
+  opening   Opening  @relation(fields: [openingId], references: [id], onDelete: Cascade)
   openingId String
   createdAt DateTime @default(now())
 
   @@unique([userId, openingId])
+  @@index([userId])
+  @@index([openingId])
 }
 
 model OpeningVisit {
@@ -131,10 +140,30 @@ model OpeningVisit {
   opening   Opening  @relation(fields: [openingId], references: [id], onDelete: Cascade)
   openingId String
   visitedAt DateTime @default(now())
-  count     Int      @default(1) // Para contar visitas repetidas
+  count     Int      @default(1)
 
   @@unique([userId, openingId])
   @@index([userId])
   @@index([openingId])
   @@index([visitedAt])
+}
+
+model PracticeSession {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  opening   Opening? @relation(fields: [openingId], references: [id], onDelete: Cascade)
+  openingId String?
+  
+  // Datos de la sesión
+  moves     String   // Movimientos en notación SAN
+  finalFen  String   // Posición final
+  movesCount Int     // Número de movimientos
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([openingId])
+  @@index([createdAt])
 }

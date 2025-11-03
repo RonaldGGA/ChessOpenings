@@ -15,6 +15,7 @@ import {
   ArrowLeft,
 } from 'lucide-react';
 import { Alias, FromTo, Opening } from '../generated/prisma/client';
+import { useRouter } from 'next/navigation';
 
 
 type OpeningWithRelations = Opening & {
@@ -42,6 +43,7 @@ export default function OpeningPracticeClient({
 }: OpeningPracticeClientProps) {
   const [currentMoveIndex, setCurrentMoveIndex] = useState(0);
   const [orientation, setOrientation] = useState<'white' | 'black'>('white');
+  const router = useRouter()
 
   const allMoves = useMemo(
     () => parseMoves(opening?.moves ?? ''),
@@ -90,7 +92,7 @@ export default function OpeningPracticeClient({
     setOrientation((prev) => (prev === 'white' ? 'black' : 'white'));
 
   const goToFreePractice = () => {
-    window.location.href = `/`;
+    router.push(`/free-practice?openingFen=${encodeURIComponent(opening.fen)}`);
   };
 
   const currentPosition = moveHistory[currentMoveIndex] ?? moveHistory[0] ?? 'start';
@@ -111,7 +113,7 @@ export default function OpeningPracticeClient({
   return (
     <div
       key={opening?.id}
-      className="min-h-screen bg-linear-to-br from-slate-900 via-purple-900 to-slate-900 text-white p-6"
+      className="p-4 min-h-screen bg-linear-to-br from-slate-900 via-purple-900 to-slate-900 text-white"
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
@@ -212,7 +214,7 @@ export default function OpeningPracticeClient({
                 className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-500 transition-colors"
               >
                 <Swords className="h-4 w-4" />
-                Free Practice
+                Practice 
               </button>
             </div>
 

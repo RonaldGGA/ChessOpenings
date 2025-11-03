@@ -49,7 +49,7 @@ export const {handlers, signIn, signOut, auth} = NextAuth({
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' }
       },
-      async authorize(credentials: Partial<Record<'email' | 'password', unknown>>, request?: Request) {
+      async authorize(credentials: Partial<Record<'email' | 'password', unknown>>) {
         // Coerce unknowns to strings to satisfy the provider type
         const email = typeof credentials?.email === 'string' ? credentials.email : (credentials?.email ? String(credentials.email) : '')
         const password = typeof credentials?.password === 'string' ? credentials.password : (credentials?.password ? String(credentials.password) : '')
@@ -68,7 +68,7 @@ export const {handlers, signIn, signOut, auth} = NextAuth({
             return null
           }
 
-          // Verificar contraseña
+          //Verificar contraseña
           const isPasswordValid = await bcrypt.compare(
             password, 
             user.password
