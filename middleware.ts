@@ -31,8 +31,7 @@ export async function middleware(request: NextRequest) {
   });
 
   const isAuthPage = request.nextUrl.pathname.startsWith('/auth');
-  const isProtectedPage = request.nextUrl.pathname.startsWith('/dashboard') || 
-                         request.nextUrl.pathname.startsWith('/profile');
+  const isProtectedPage = request.nextUrl.pathname.startsWith('/dashboard')
 
   if (isAuthPage && token) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
@@ -49,7 +48,6 @@ export const config = {
   matcher: [
     '/api/:path*',
     '/dashboard/:path*',
-    '/profile/:path*',
     '/auth/:path*'
   ],
 };
