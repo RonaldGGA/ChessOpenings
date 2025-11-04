@@ -1,11 +1,10 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Chessboard, ChessboardOptions } from "react-chessboard";
 import { Maximize2, RotateCw, Settings2, X, Save } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 
-import Navigation from "./components/navigation";
 import RelatedOpeningsPanel from "./components/relatedOpeningsPanel";
 import MoveHistory from "./components/moveHistory";
 import AnalysisPanel from "./components/analysisPanel";
@@ -13,11 +12,14 @@ import SettingsModal from "./components/settingsModal";
 import { useChessGame } from "../stores/useChessStore";
 import { useChessLogic } from "../hooks/useChessLogic";
 import { usePracticeSession } from "../hooks/usePracticeSession";
+import { Navigation } from "../components/navigation";
+import { signIn, useSession } from "next-auth/react";
 
 const FreePracticePage = () => {
   const searchParams = useSearchParams();
-  const openingFen = searchParams.get('openingFen');
-
+  const openingFen = searchParams.get("openingFen");
+  const session = useSession()
+  
   // Estado global del juego
   const {
     relatedOpenings,
@@ -32,7 +34,7 @@ const FreePracticePage = () => {
     isCpuThinking,
     settings,
     moveAnalysis,
-    
+
     // Acciones
     setIsFullscreen,
     onSquareClick,
@@ -40,7 +42,7 @@ const FreePracticePage = () => {
     setBestMove,
     setBestEnemyMove,
     loadOpeningPosition,
-    resetBoard
+    resetBoard,
   } = useChessGame();
 
   // Lógica del juego
@@ -49,23 +51,23 @@ const FreePracticePage = () => {
   // Gestión de sesiones simplificada
   const { savePracticeSession } = usePracticeSession();
   const [openSettings, setOpenSettings] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   // Efecto para cargar la apertura desde la URL - SOLO UNA VEZ
   useEffect(() => {
     if (openingFen) {
       try {
-        console.log('Loading opening from URL:', openingFen);
+        console.log("Loading opening from URL:", openingFen);
         loadOpeningPosition(openingFen);
       } catch (error) {
-        console.error('Failed to load opening from URL:', error);
+        console.error("Failed to load opening from URL:", error);
       }
+    } else {
+      loadOpeningPosition(
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+      );
     }
-      else{
-        loadOpeningPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
-      }
-    }, [openingFen, loadOpeningPosition]);
+  }, [openingFen, loadOpeningPosition]);
 
   // Reset handler que considera las aperturas cargadas
   const handleReset = useCallback(() => {
@@ -81,8 +83,12 @@ const FreePracticePage = () => {
   // Handler para guardar sesión
   const handleSaveSession = async () => {
     if (movesHistory.length === 0) {
-      alert('No moves to save! Make some moves first.');
+      alert("No moves to save! Make some moves first.");
       return;
+    }
+    if(!session.data?.user){
+      signIn(undefined, { callbackUrl: "/free-practice" })
+      return
     }
 
     setIsSaving(true);
@@ -130,7 +136,8 @@ const FreePracticePage = () => {
     settings.showBestMoveArrow &&
     bestMove &&
     !isCpuThinking &&
-    !isAnalyzing
+    !isAnalyzing &&
+    movesHistory.length !== 0
   ) {
     arrows.push({
       startSquare: bestMove.substring(0, 2),
@@ -142,7 +149,8 @@ const FreePracticePage = () => {
     settings.showPonderArrow &&
     bestEnemyMove &&
     !isCpuThinking &&
-    !isAnalyzing
+    !isAnalyzing &&
+    movesHistory.length !== 0
   ) {
     arrows.push({
       startSquare: bestEnemyMove.substring(0, 2),
@@ -154,7 +162,8 @@ const FreePracticePage = () => {
   const chessboardOptions: ChessboardOptions = {
     arrows: arrows.length > 0 ? arrows : undefined,
     onPieceDrop,
-    onSquareClick: (args) => onSquareClick({square:args.square, piece:args.piece}),
+    onSquareClick: (args) =>
+      onSquareClick({ square: args.square, piece: args.piece }),
     position: chessPosition,
     squareStyles: optionSquares,
     id: "free-practice-chessboard",
@@ -198,7 +207,7 @@ const FreePracticePage = () => {
 
   return (
     <div className="min-h-screen bg-linear-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
-      <Navigation mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
+      <Navigation />
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
@@ -240,7 +249,7 @@ const FreePracticePage = () => {
                   >
                     <RotateCw className="h-4 w-4" />
                     <span className="hidden md:block">
-                      {openingFen ? 'Reload Opening' : 'Reset'}
+                      {openingFen ? "Reload Opening" : "Reset"}
                     </span>
                   </button>
                   <button
@@ -250,7 +259,7 @@ const FreePracticePage = () => {
                   >
                     <Save className="h-4 w-4" />
                     <span className="hidden md:block">
-                      {isSaving ? 'Saving...' : 'Save Session'}
+                      {isSaving ? "Saving..." : "Save Session"}
                     </span>
                   </button>
                   <button
@@ -306,10 +315,13 @@ const FreePracticePage = () => {
               </div>
 
               {/* Move History */}
-   
+
               {settings.showMoveHistory && (
                 <div className="mt-6">
-                  <MoveHistory movesHistory={movesHistory} isOpeningFen={openingFen} />
+                  <MoveHistory
+                    movesHistory={movesHistory}
+                    isOpeningFen={openingFen}
+                  />
                 </div>
               )}
             </div>
@@ -330,7 +342,10 @@ const FreePracticePage = () => {
       </div>
 
       {/* Settings Modal */}
-      <SettingsModal setOpenSettings={setOpenSettings} openSettings={openSettings}/>
+      <SettingsModal
+        setOpenSettings={setOpenSettings}
+        openSettings={openSettings}
+      />
     </div>
   );
 };

@@ -49,11 +49,11 @@ export default function NotFound() {
             Back to Home
           </Link>
           <Link
-            href="/explore"
+            href="/search-openings"
             className="px-5 py-2.5 bg-transparent text-yellow-400 font-semibold rounded-lg hover:bg-yellow-400/10 transition-all duration-300 border border-yellow-400/50 hover:border-yellow-400 flex items-center justify-center gap-2 text-sm"
           >
             <FaSearch className="h-3 w-3" />
-            Explore Openings
+            Search Openings
           </Link>
         </div>
       </div>

@@ -9,9 +9,6 @@ import {
   Filter,
   Loader,
   ChevronDown,
-  Home,
-  Menu,
-  X,
   Grid,
   List,
   Star,
@@ -21,7 +18,7 @@ import { FaChessKing } from "react-icons/fa";
 import ScrollToTop from "../components/scrollToTop";
 import OpeningCard from "../components/openingCard";
 import { useDebounce } from "../hooks/useDebounce";
-import UserButton from "../components/userButton";
+import { Navigation } from "../components/navigation";
 
 export interface Opening {
   id: string;
@@ -54,8 +51,7 @@ const ExplorePage = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [selectedEco, setSelectedEco] = useState("");
   const [ecoOptions, setEcoOptions] = useState<string[]>([]);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<"grid" | "list">("list");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [sortBy, setSortBy] = useState<SortOption>("popular");
   const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
 
@@ -117,7 +113,9 @@ const ExplorePage = () => {
           setOpenings((prev) => {
             const allOpenings = [...prev, ...data.openings];
             const uniqueOpenings = Array.from(
-              new Map(allOpenings.map((opening) => [opening.id, opening])).values()
+              new Map(
+                allOpenings.map((opening) => [opening.id, opening])
+              ).values()
             );
             return uniqueOpenings;
           });
@@ -157,8 +155,15 @@ const ExplorePage = () => {
     setHasMore(true);
     setTotalLoaded(0);
 
-    fetchOpenings(1, false, debouncedSearchTerm, selectedEco, sortBy, showOnlyFavorites);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    fetchOpenings(
+      1,
+      false,
+      debouncedSearchTerm,
+      selectedEco,
+      sortBy,
+      showOnlyFavorites
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearchTerm, selectedEco, sortBy, showOnlyFavorites]);
 
   const handleLoadMore = () => {
@@ -179,13 +184,14 @@ const ExplorePage = () => {
   };
 
   const handleToggleFavorite = (openingId: string, isFavorite: boolean) => {
-    setOpenings(prev =>
-      prev.map(opening =>
+    setOpenings((prev) =>
+      prev.map((opening) =>
         opening.id === openingId
           ? {
               ...opening,
               isFavorite,
-              totalFavorites: (opening.totalFavorites || 0) + (isFavorite ? 1 : -1),
+              totalFavorites:
+                (opening.totalFavorites || 0) + (isFavorite ? 1 : -1),
             }
           : opening
       )
@@ -212,90 +218,9 @@ const ExplorePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
+    <div className="min-h-[120vh] bg-linear-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
       {/* Navigation */}
-      <nav className="bg-slate-800/30 border-b border-slate-700/50">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <Link href="/" className="flex items-center space-x-3 group">
-              <div className="relative">
-                <div className="h-8 w-8 bg-yellow-400 rounded-lg flex items-center justify-center group-hover:bg-yellow-300 transition-colors">
-                  <span className="text-slate-900 font-bold text-lg">♔</span>
-                </div>
-                <div className="absolute inset-0 bg-yellow-400/20 rounded-lg group-hover:bg-yellow-400/30 transition-colors blur-sm"></div>
-              </div>
-              <span className="text-xl font-bold bg-linear-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
-                ChessMaster
-              </span>
-            </Link>
-
-            {/* Desktop Navigation Links */}
-            <div className="hidden md:flex items-center space-x-6 relative z-50">
-              <Link
-                href="/"
-                className="flex items-center space-x-2 text-gray-300 hover:text-yellow-400 transition-colors group"
-              >
-                <Home className="h-4 w-4 group-hover:scale-110 transition-transform" />
-                <span>Home</span>
-              </Link>
-              <Link
-                href="/free-practice"
-                className="flex items-center space-x-2 text-gray-300 hover:text-yellow-400 transition-colors group"
-              >
-                <span>Free Practice</span>
-              </Link>
-              <Link
-                href="/dashboard"
-                className="flex items-center space-x-2 text-gray-300 hover:text-yellow-400 transition-colors group"
-              >
-                <span>Dashboard</span>
-              </Link>
-              <div className="h-6 w-px bg-slate-600"></div>
-              <UserButton />
-            </div>
-
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-lg bg-slate-700/50 border border-slate-600 hover:border-yellow-500/50 transition-colors"
-            >
-              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </button>
-          </div>
-
-          {/* Mobile Navigation Menu */}
-          {mobileMenuOpen && (
-            <div className="md:hidden py-4 border-t border-slate-700/50 flex justify-between items-center">
-              <div className="flex flex-col space-y-4">
-                <Link
-                  href="/"
-                  className="flex items-center space-x-3 text-gray-300 hover:text-yellow-400 transition-colors py-2"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <Home className="h-5 w-5" />
-                  <span>Home</span>
-                </Link>
-                <Link
-                  href="/free-practice"
-                  className="flex items-center space-x-3 text-gray-300 hover:text-yellow-400 transition-colors py-2"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <span>Free Practice</span>
-                </Link>
-                <Link
-                  href="/dashboard"
-                  className="flex items-center space-x-3 text-gray-300 hover:text-yellow-400 transition-colors py-2"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <span>Dashboard</span>
-                </Link>
-              </div>
-              <UserButton />
-            </div>
-          )}
-        </div>
-      </nav>
+      <Navigation/>
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
@@ -304,19 +229,21 @@ const ExplorePage = () => {
           <div className="flex items-center justify-center mb-4">
             <FaChessKing className="h-12 w-12 text-yellow-400 mr-3" />
             <h1 className="text-4xl font-bold bg-linear-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
-              Chess Openings Explorer
+              Search Chess Openings
             </h1>
           </div>
           <p className="text-xl text-gray-300 max-w-2xl mx-auto">
             {totalLoaded > 0
-              ? `Found ${openings.length} opening${openings.length !== 1 ? "s" : ""}`
+              ? `Found ${openings.length} opening${
+                  openings.length !== 1 ? "s" : ""
+                }`
               : "Explore thousands of chess openings from our database"}
             {loading && " (Searching...)"}
           </p>
         </div>
 
         {/* Search and Filter Section */}
-        <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 mb-8 border border-slate-700">
+        <div className="bg-slate-800/50 rounded-2xl p-6 mb-8 border border-slate-700">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
             {/* Search Input */}
             <div className="md:col-span-2">
@@ -394,7 +321,11 @@ const ExplorePage = () => {
                       : "bg-slate-700/50 text-gray-400 border-slate-600 hover:border-yellow-500/50 hover:text-yellow-400"
                   }`}
                 >
-                  <Star className={`h-4 w-4 ${showOnlyFavorites ? "fill-current" : ""}`} />
+                  <Star
+                    className={`h-4 w-4 ${
+                      showOnlyFavorites ? "fill-current" : ""
+                    }`}
+                  />
                   <span>My Favorites</span>
                 </button>
               )}
@@ -427,7 +358,10 @@ const ExplorePage = () => {
               </div>
 
               {/* Clear Filters Button */}
-              {(debouncedSearchTerm || selectedEco || showOnlyFavorites || sortBy !== "popular") && (
+              {(debouncedSearchTerm ||
+                selectedEco ||
+                showOnlyFavorites ||
+                sortBy !== "popular") && (
                 <button
                   onClick={clearFilters}
                   className="text-sm text-yellow-400 hover:text-yellow-300 transition-colors flex items-center gap-1 px-3 py-2 bg-slate-700/50 hover:bg-slate-700/70 rounded-xl border border-slate-600 hover:border-yellow-500/50"
@@ -516,7 +450,9 @@ const ExplorePage = () => {
             <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-12 border border-slate-700 max-w-2xl mx-auto">
               <FaChessKing className="h-20 w-20 text-gray-600 mx-auto mb-6" />
               <h3 className="text-2xl font-bold text-gray-400 mb-4">
-                {showOnlyFavorites ? "No favorite openings" : "No openings found"}
+                {showOnlyFavorites
+                  ? "No favorite openings"
+                  : "No openings found"}
               </h3>
               <p className="text-gray-500 mb-8 max-w-md mx-auto text-lg">
                 {searchTerm || selectedEco
@@ -539,33 +475,6 @@ const ExplorePage = () => {
       </div>
       <ScrollToTop />
     </div>
-  );
-};
-
-// Link component for navigation
-const Link = ({
-  href,
-  children,
-  className,
-  onClick,
-}: {
-  href: string;
-  children: React.ReactNode;
-  className?: string;
-  onClick?: () => void;
-}) => {
-  const router = useRouter();
-
-  const handleClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (onClick) onClick();
-    router.push(href);
-  };
-
-  return (
-    <a href={href} onClick={handleClick} className={className}>
-      {children}
-    </a>
   );
 };
 

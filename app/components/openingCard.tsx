@@ -4,7 +4,7 @@
 import { MouseEventHandler, useState } from "react";
 import { signIn, useSession } from "next-auth/react";
 import { Heart, Star, Eye } from "lucide-react";
-import { Opening } from "../explore/page";
+import { Opening } from "../search-openings/page";
 
 interface OpeningCardProps {
   opening: Opening;

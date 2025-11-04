@@ -118,11 +118,11 @@ export default function OpeningPracticeClient({
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <Link
-          href="/explore"
+          href="/search-openings"
           className="flex items-center gap-2 text-yellow-400 hover:text-yellow-300 transition-colors"
         >
           <ArrowLeft className="h-5 w-5" />
-          Back to Explore
+          Back
         </Link>
 
         <div className="text-center">
@@ -145,10 +145,15 @@ export default function OpeningPracticeClient({
 
         <Link
           href={`/practice/${opening?.id}`}
-          className="flex items-center gap-2 text-yellow-400 hover:text-yellow-300 transition-colors"
         >
+          <span
+          className="flex items-center gap-2 text-yellow-400 hover:text-yellow-300 transition-colors"
+          
+          >
           <Info className="h-5 w-5" />
-          Details
+          Details 
+          </span>
+          <span className='text-yellow-700 text-xs'>Coming soon...</span>
         </Link>
       </div>
 
