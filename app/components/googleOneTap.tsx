@@ -46,7 +46,7 @@ export default function GoogleOneTap() {
 
       try {
         window.google.accounts.id.initialize({
-          client_id: process.env.GOOGLE_ID! || "376731606079-2bqu6ocdosha8450d186qss894sl4l3n.apps.googleusercontent.com",
+          client_id: process.env.GOOGLE_OAUTH_CLIENT_ID! || "112801774402482401906",
           callback: handleCredentialResponse,
           // Opt-in to FedCM
           use_fedcm_for_prompt: true,
