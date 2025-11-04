@@ -1,5 +1,5 @@
 // components/Navigation.tsx
-'use client';
+"use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -17,8 +17,8 @@ export function Navigation() {
   useEffect(() => {
     const changeSetMounted = () => {
       setMounted(true);
-    }
-    changeSetMounted()
+    };
+    changeSetMounted();
   }, []);
 
   // Cerrar menú móvil al redimensionar
@@ -29,32 +29,42 @@ export function Navigation() {
       }
     };
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   const menuItems = [
     { href: "/", icon: Home, label: "Home", exact: true },
-    { href: "/free-practice", icon: FaChessBoard, label: "Practice", exact: false },
-    { href: "/search-openings", icon: Search, label: "Search Openings", exact: false },
+    {
+      href: "/free-practice",
+      icon: FaChessBoard,
+      label: "Practice",
+      exact: false,
+    },
+    {
+      href: "/search-openings",
+      icon: Search,
+      label: "Search Openings",
+      exact: false,
+    },
     { href: "/dashboard", icon: BarChart3, label: "Dashboard", exact: false },
   ];
 
   // Función para verificar si un enlace está activo
   const isActive = (href: string, exact: boolean) => {
     if (!mounted) return false;
-    
+
     if (exact) {
       return pathname === href;
     }
-    
+
     // Para rutas no exactas, verificar si la ruta comienza con el href
     return pathname.startsWith(href);
   };
 
   // Estilos para estados activos/inactivos
-  const getLinkStyles = (isActive: boolean) => 
-    isActive 
+  const getLinkStyles = (isActive: boolean) =>
+    isActive
       ? "text-yellow-400 bg-yellow-400/10 border border-yellow-400/20 shadow-lg shadow-yellow-400/10"
       : "text-gray-300 hover:text-yellow-400 hover:bg-slate-700/30";
 
@@ -68,9 +78,11 @@ export function Navigation() {
       <nav className="bg-slate-800/30 backdrop-blur-sm border-b border-slate-700/50 sticky top-0 z-50">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
-            
             {/* Logo */}
-            <Link href="/" className="flex items-center space-x-3 group shrink-0">
+            <Link
+              href="/"
+              className="flex items-center space-x-3 group shrink-0"
+            >
               <div className="relative">
                 <div className="h-8 w-8 bg-yellow-400 rounded-lg flex items-center justify-center group-hover:bg-yellow-300 transition-colors">
                   <span className="text-slate-900 font-bold text-lg">♔</span>
@@ -90,7 +102,9 @@ export function Navigation() {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`flex items-center space-x-2 px-4 py-2 rounded-xl transition-all duration-200 group ${getLinkStyles(active)}`}
+                    className={`flex relative items-center space-x-2 px-4 py-2 rounded-xl transition-all duration-200 group ${getLinkStyles(
+                      active
+                    )}`}
                   >
                     <item.icon className={`h-4 w-4 ${getIconStyles(active)}`} />
                     <span className="font-medium">{item.label}</span>
@@ -108,7 +122,7 @@ export function Navigation() {
               <div className="hidden md:block">
                 <UserButton />
               </div>
-              
+
               {/* Mobile Menu Button */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -128,12 +142,12 @@ export function Navigation() {
 
       {/* Mobile Menu Overlay */}
       {mobileMenuOpen && mounted && (
-        <div 
-          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden" 
+        <div
+          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden"
           onClick={() => setMobileMenuOpen(false)}
         >
-          <div 
-            className="fixed right-0 top-0 h-full w-80 bg-slate-900/95 backdrop-blur-md border-l border-slate-700/50 shadow-2xl mobile-menu"
+          <div
+            className="fixed right-0 top-18 h-full w-80 bg-slate-900/95 backdrop-blur-md border-l border-slate-700/50 shadow-2xl mobile-menu"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-6 space-y-2">
@@ -144,7 +158,9 @@ export function Navigation() {
                     key={item.href}
                     href={item.href}
                     onClick={() => setMobileMenuOpen(false)}
-                    className={`flex items-center space-x-3 p-4 rounded-xl transition-all duration-200 group ${getLinkStyles(active)}`}
+                    className={`flex items-center space-x-3 p-4 rounded-xl transition-all duration-200 group ${getLinkStyles(
+                      active
+                    )}`}
                   >
                     <item.icon className={`h-5 w-5 ${getIconStyles(active)}`} />
                     <span className="font-medium">{item.label}</span>
@@ -154,6 +170,9 @@ export function Navigation() {
                   </Link>
                 );
               })}
+              <div className="flex justify-center mt-4">
+                <UserButton />
+              </div>
             </div>
           </div>
         </div>

@@ -2,12 +2,14 @@ import Link from 'next/link';
 import { FaChessBoard, FaSearch, FaChartLine } from 'react-icons/fa';
 import { Navigation } from './components/navigation';
 import { Footer } from './components/footer';
+import HomeToast from './components/homeToast';
 
 const HomePage = () => {
   return (
     <div className="min-h-screen bg-linear-to-br from-slate-900 via-purple-900 to-slate-900 text-white flex flex-col">
       {/* Navigation - Professional and clean */}
       <Navigation/>
+        <HomeToast />
       {/* Hero Section */}
       <main className="flex-1 container mx-auto px-4 py-8 md:py-16">
         <div className="text-center max-w-4xl mx-auto">

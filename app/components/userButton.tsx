@@ -35,6 +35,8 @@ export default function UserButton() {
             <Image
               src={session.user.image}
               alt={session.user.name || "User"}
+              width={32}
+              height={32}
               className="h-8 w-8 rounded-full border-2 border-yellow-400/50"
             />
           ) : (

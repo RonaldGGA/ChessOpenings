@@ -1,15 +1,31 @@
+"use client";
+
 import { 
   FaEnvelope, 
   FaTwitter, 
   FaGithub, 
   FaMapMarkerAlt, 
   FaPaperPlane,
-  FaClock
+  FaClock,
+  FaCheck,
+  FaExclamationTriangle
 } from 'react-icons/fa';
 import { Navigation } from '../components/navigation';
 import { Footer } from '../components/footer';
+import { useState } from 'react';
 
 const ContactPage = () => {
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    subject: '',
+    message: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState('');
+
   const contactMethods = [
     {
       icon: FaEnvelope,
@@ -60,6 +76,105 @@ const ContactPage = () => {
     }
   ];
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { id, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [id]: value
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setSubmitStatus('idle');
+    setErrorMessage('');
+
+    try {
+      // Reemplaza esta URL con la de tu API real
+      const API_URL = process.env.NEXT_PUBLIC_CONTACT_API_URL || '/api/contact';
+      
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          // Estructura del objeto que se enviará a tu API
+          firstName: formData.firstName.trim(),
+          lastName: formData.lastName.trim(),
+          email: formData.email.trim(),
+          subject: formData.subject,
+          message: formData.message.trim(),
+          timestamp: new Date().toISOString(),
+          source: 'chessmaster-website'
+        }),
+      });
+
+      if (response.ok) {
+        setSubmitStatus('success');
+        // Resetear el formulario
+        setFormData({
+          firstName: '',
+          lastName: '',
+          email: '',
+          subject: '',
+          message: ''
+        });
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      setSubmitStatus('error');
+      setErrorMessage(
+        error instanceof Error 
+          ? error.message 
+          : 'Failed to send message. Please try again later.'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Componente para mostrar el estado del envío
+  const SubmitStatusMessage = () => {
+    if (submitStatus === 'success') {
+      return (
+        <div className="mb-6 p-4 bg-green-500/20 border border-green-500/30 rounded-xl animate-fade-in">
+          <div className="flex items-center space-x-3">
+            <FaCheck className="h-5 w-5 text-green-400 shrink-0" />
+            <div>
+              <p className="text-green-400 font-medium">Message sent successfully!</p>
+              <p className="text-green-300 text-sm mt-1">
+                Thank you for contacting us. We&apos;ll get back to you as soon as possible.
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (submitStatus === 'error') {
+      return (
+        <div className="mb-6 p-4 bg-red-500/20 border border-red-500/30 rounded-xl animate-fade-in">
+          <div className="flex items-start space-x-3">
+            <FaExclamationTriangle className="h-5 w-5 text-red-400 mt-0.5 shrink-0" />
+            <div>
+              <p className="text-red-400 font-medium">Failed to send message</p>
+              <p className="text-red-300 text-sm mt-1">
+                {errorMessage || 'Please try again later or contact us through other channels.'}
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return null;
+  };
+
   return (
     <div className="min-h-screen bg-linear-to-br from-slate-900 via-purple-900 to-slate-900 text-white flex flex-col">
       <Navigation />
@@ -103,6 +218,8 @@ const ContactPage = () => {
                     <a 
                       href={method.link}
                       className="text-yellow-400 hover:text-yellow-300 transition-colors text-sm"
+                      target="_blank"
+                      rel="noopener noreferrer"
                     >
                       {method.value}
                     </a>
@@ -142,51 +259,70 @@ const ContactPage = () => {
             <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-8 border border-slate-700">
               <h2 className="text-3xl font-bold mb-6 text-white">Send us a Message</h2>
               
-              <form className="space-y-6">
+              {/* Status Messages */}
+              <SubmitStatusMessage />
+              
+              <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="firstName" className="block text-sm font-medium text-gray-300 mb-2">
-                      First Name
+                      First Name *
                     </label>
                     <input
                       type="text"
                       id="firstName"
+                      value={formData.firstName}
+                      onChange={handleInputChange}
                       className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 text-white placeholder-gray-500 transition-colors"
                       placeholder="Your first name"
+                      required
+                      disabled={isSubmitting}
                     />
                   </div>
                   <div>
                     <label htmlFor="lastName" className="block text-sm font-medium text-gray-300 mb-2">
-                      Last Name
+                      Last Name *
                     </label>
                     <input
                       type="text"
                       id="lastName"
+                      value={formData.lastName}
+                      onChange={handleInputChange}
                       className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 text-white placeholder-gray-500 transition-colors"
                       placeholder="Your last name"
+                      required
+                      disabled={isSubmitting}
                     />
                   </div>
                 </div>
 
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
-                    Email Address
+                    Email Address *
                   </label>
                   <input
                     type="email"
                     id="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
                     className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 text-white placeholder-gray-500 transition-colors"
                     placeholder="your.email@example.com"
+                    required
+                    disabled={isSubmitting}
                   />
                 </div>
 
                 <div>
                   <label htmlFor="subject" className="block text-sm font-medium text-gray-300 mb-2">
-                    Subject
+                    Subject *
                   </label>
                   <select
                     id="subject"
+                    value={formData.subject}
+                    onChange={handleInputChange}
                     className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 text-white transition-colors"
+                    required
+                    disabled={isSubmitting}
                   >
                     <option value="">Select a subject</option>
                     <option value="support">Technical Support</option>
@@ -199,23 +335,41 @@ const ContactPage = () => {
 
                 <div>
                   <label htmlFor="message" className="block text-sm font-medium text-gray-300 mb-2">
-                    Message
+                    Message *
                   </label>
                   <textarea
                     id="message"
                     rows={5}
+                    value={formData.message}
+                    onChange={handleInputChange}
                     className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 text-white placeholder-gray-500 transition-colors resize-vertical"
                     placeholder="Tell us how we can help you or just tell us your thoughts :)"
+                    required
+                    disabled={isSubmitting}
                   ></textarea>
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full px-8 py-4 bg-yellow-500 text-slate-900 font-semibold rounded-xl hover:bg-yellow-400 transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-yellow-500/25 border-2 border-yellow-500 hover:border-yellow-400 flex items-center justify-center gap-3"
+                  disabled={isSubmitting}
+                  className="w-full px-8 py-4 bg-yellow-500 text-slate-900 font-semibold rounded-xl hover:bg-yellow-400 transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-yellow-500/25 border-2 border-yellow-500 hover:border-yellow-400 flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <FaPaperPlane className="h-5 w-5" />
-                  Send Message
+                  {isSubmitting ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-slate-900"></div>
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <FaPaperPlane className="h-5 w-5" />
+                      Send Message
+                    </>
+                  )}
                 </button>
+                
+                <p className="text-gray-400 text-xs text-center">
+                  * Required fields
+                </p>
               </form>
             </div>
           </div>
