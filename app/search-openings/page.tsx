@@ -1,4 +1,4 @@
-// app/explore/page.tsx (actualizado)
+// app/explore/page.tsx (MEJORADO SOLO ACCESIBILIDAD)
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
@@ -223,11 +223,11 @@ const ExplorePage = () => {
       <Navigation/>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8">
         {/* Header */}
-        <div className="text-center mb-8">
+        <header className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
-            <FaChessKing className="h-12 w-12 text-yellow-400 mr-3" />
+            <FaChessKing className="h-12 w-12 text-yellow-400 mr-3" aria-hidden="true" />
             <h1 className="text-4xl font-bold bg-linear-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
               Search Chess Openings
             </h1>
@@ -238,26 +238,36 @@ const ExplorePage = () => {
                   openings.length !== 1 ? "s" : ""
                 }`
               : "Explore thousands of chess openings from our database"}
-            {loading && " (Searching...)"}
+            {loading && (
+              <span aria-live="polite" role="status"> (Searching...)</span>
+            )}
           </p>
-        </div>
+        </header>
 
         {/* Search and Filter Section */}
-        <div className="bg-slate-800/50 rounded-2xl p-6 mb-8 border border-slate-700">
+        <section 
+          aria-labelledby="search-filters-heading"
+          className="bg-slate-800/50 rounded-2xl p-6 mb-8 border border-slate-700"
+        >
+          <h2 id="search-filters-heading" className="sr-only">
+            Search and Filter Options
+          </h2>
+          
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
             {/* Search Input */}
             <div className="md:col-span-2">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" aria-hidden="true" />
                 <input
                   type="text"
                   placeholder="Search by name, ECO code, moves (e.g., 'Sicilian Defense', 'B20', '1. e4 c5')"
                   value={searchTerm}
                   onChange={handleSearchChange}
                   className="w-full pl-10 pr-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                  aria-label="Search chess openings by name, ECO code, or moves"
                 />
                 {loading && (
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2" aria-hidden="true">
                     <Loader className="h-5 w-5 animate-spin text-yellow-400" />
                   </div>
                 )}
@@ -266,11 +276,12 @@ const ExplorePage = () => {
 
             {/* ECO Filter */}
             <div className="relative">
-              <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+              <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" aria-hidden="true" />
               <select
                 value={selectedEco}
                 onChange={handleEcoChange}
                 className="w-full pl-10 pr-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent appearance-none"
+                aria-label="Filter by ECO code"
               >
                 <option value="">All ECO Codes</option>
                 {ecoOptions.map((eco) => (
@@ -283,11 +294,12 @@ const ExplorePage = () => {
 
             {/* Sort Options */}
             <div className="relative">
-              <TrendingUp className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+              <TrendingUp className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" aria-hidden="true" />
               <select
                 value={sortBy}
                 onChange={handleSortChange}
                 className="w-full pl-10 pr-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent appearance-none"
+                aria-label="Sort openings by"
               >
                 <option value="popular">Most Popular</option>
                 <option value="favorites">Most Favorited</option>
@@ -303,7 +315,7 @@ const ExplorePage = () => {
             {/* Active Filters */}
             <div className="flex items-center space-x-4">
               {(debouncedSearchTerm || selectedEco) && (
-                <div className="text-sm text-gray-300">
+                <div className="text-sm text-gray-300" aria-live="polite">
                   Searching for:
                   {debouncedSearchTerm && ` "${debouncedSearchTerm}"`}
                   {selectedEco && ` in ECO ${selectedEco}`}
@@ -315,16 +327,19 @@ const ExplorePage = () => {
               {session && (
                 <button
                   onClick={() => setShowOnlyFavorites(!showOnlyFavorites)}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-xl border transition-all duration-200 ${
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-xl border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 focus:ring-offset-slate-900 ${
                     showOnlyFavorites
                       ? "bg-yellow-500/20 text-yellow-400 border-yellow-500/50"
                       : "bg-slate-700/50 text-gray-400 border-slate-600 hover:border-yellow-500/50 hover:text-yellow-400"
                   }`}
+                  aria-pressed={showOnlyFavorites}
+                  aria-label={showOnlyFavorites ? "Show all openings" : "Show only favorite openings"}
                 >
                   <Star
                     className={`h-4 w-4 ${
                       showOnlyFavorites ? "fill-current" : ""
                     }`}
+                    aria-hidden="true"
                   />
                   <span>My Favorites</span>
                 </button>
@@ -334,26 +349,34 @@ const ExplorePage = () => {
             {/* View Mode Toggle */}
             <div className="flex items-center space-x-4 ml-auto">
               {/* View Mode Toggle */}
-              <div className="flex items-center space-x-1 bg-slate-700/50 rounded-xl p-1 border border-slate-600">
+              <div 
+                className="flex items-center space-x-1 bg-slate-700/50 rounded-xl p-1 border border-slate-600"
+                role="group"
+                aria-label="View mode selection"
+              >
                 <button
                   onClick={() => setViewMode("grid")}
-                  className={`p-2 rounded-lg transition-all duration-200 ${
+                  className={`p-2 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 focus:ring-offset-slate-900 ${
                     viewMode === "grid"
                       ? "bg-yellow-500 text-slate-900 shadow-lg shadow-yellow-500/25"
                       : "text-gray-400 hover:text-yellow-400 hover:bg-slate-600/50"
                   }`}
+                  aria-pressed={viewMode === "grid"}
+                  aria-label="Grid view"
                 >
-                  <Grid className="h-4 w-4" />
+                  <Grid className="h-4 w-4" aria-hidden="true" />
                 </button>
                 <button
                   onClick={() => setViewMode("list")}
-                  className={`p-2 rounded-lg transition-all duration-200 ${
+                  className={`p-2 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 focus:ring-offset-slate-900 ${
                     viewMode === "list"
                       ? "bg-yellow-500 text-slate-900 shadow-lg shadow-yellow-500/25"
                       : "text-gray-400 hover:text-yellow-400 hover:bg-slate-600/50"
                   }`}
+                  aria-pressed={viewMode === "list"}
+                  aria-label="List view"
                 >
-                  <List className="h-4 w-4" />
+                  <List className="h-4 w-4" aria-hidden="true" />
                 </button>
               </div>
 
@@ -364,20 +387,29 @@ const ExplorePage = () => {
                 sortBy !== "popular") && (
                 <button
                   onClick={clearFilters}
-                  className="text-sm text-yellow-400 hover:text-yellow-300 transition-colors flex items-center gap-1 px-3 py-2 bg-slate-700/50 hover:bg-slate-700/70 rounded-xl border border-slate-600 hover:border-yellow-500/50"
+                  className="text-sm text-yellow-400 hover:text-yellow-300 transition-colors flex items-center gap-1 px-3 py-2 bg-slate-700/50 hover:bg-slate-700/70 rounded-xl border border-slate-600 hover:border-yellow-500/50 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 focus:ring-offset-slate-900"
+                  aria-label="Clear all filters"
                 >
                   Clear filters
                 </button>
               )}
             </div>
           </div>
-        </div>
+        </section>
 
         {/* Results */}
         {loading ? (
-          <div className="flex justify-center items-center py-16">
+          <div 
+            className="flex justify-center items-center py-16" 
+            role="status" 
+            aria-live="polite"
+            aria-label="Loading openings"
+          >
             <div className="text-center">
-              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-yellow-400 mx-auto mb-4"></div>
+              <div 
+                className="animate-spin rounded-full h-16 w-16 border-b-2 border-yellow-400 mx-auto mb-4"
+                aria-hidden="true"
+              ></div>
               <p className="text-gray-400 text-lg">Loading openings...</p>
             </div>
           </div>
@@ -390,6 +422,8 @@ const ExplorePage = () => {
                   ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8"
                   : "space-y-4 mb-8"
               }
+              role="list"
+              aria-label="Chess openings results"
             >
               {openings.map((opening) => (
                 <OpeningCard
@@ -410,16 +444,17 @@ const ExplorePage = () => {
                 <button
                   onClick={handleLoadMore}
                   disabled={loadingMore}
-                  className="px-8 py-4 bg-yellow-500 text-slate-900 font-semibold rounded-xl hover:bg-yellow-400 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3 shadow-lg hover:shadow-xl hover:shadow-yellow-500/25 border-2 border-yellow-500 hover:border-yellow-400"
+                  className="px-8 py-4 bg-yellow-500 text-slate-900 font-semibold rounded-xl hover:bg-yellow-400 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3 shadow-lg hover:shadow-xl hover:shadow-yellow-500/25 border-2 border-yellow-500 hover:border-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 focus:ring-offset-slate-900"
+                  aria-label={loadingMore ? "Loading more openings" : "Load more openings"}
                 >
                   {loadingMore ? (
                     <>
-                      <Loader className="h-5 w-5 animate-spin" />
+                      <Loader className="h-5 w-5 animate-spin" aria-hidden="true" />
                       Loading more openings...
                     </>
                   ) : (
                     <>
-                      <ChevronDown className="h-5 w-5" />
+                      <ChevronDown className="h-5 w-5" aria-hidden="true" />
                       Load More Openings
                     </>
                   )}
@@ -429,9 +464,13 @@ const ExplorePage = () => {
 
             {/* No More Results */}
             {!hasMore && openings.length > 0 && (
-              <div className="text-center py-8">
+              <div 
+                className="text-center py-8"
+                role="status"
+                aria-live="polite"
+              >
                 <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 border border-slate-700 max-w-md mx-auto">
-                  <div className="text-yellow-400 text-2xl mb-2">🎉</div>
+                  <div className="text-yellow-400 text-2xl mb-2" aria-hidden="true">🎉</div>
                   <p className="text-gray-400 text-lg mb-2">
                     All {openings.length} openings loaded!
                   </p>
@@ -446,9 +485,13 @@ const ExplorePage = () => {
 
         {/* No Results State */}
         {!loading && openings.length === 0 && (
-          <div className="text-center py-16">
+          <div 
+            className="text-center py-16"
+            role="status"
+            aria-live="polite"
+          >
             <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-12 border border-slate-700 max-w-2xl mx-auto">
-              <FaChessKing className="h-20 w-20 text-gray-600 mx-auto mb-6" />
+              <FaChessKing className="h-20 w-20 text-gray-600 mx-auto mb-6" aria-hidden="true" />
               <h3 className="text-2xl font-bold text-gray-400 mb-4">
                 {showOnlyFavorites
                   ? "No favorite openings"
@@ -464,7 +507,8 @@ const ExplorePage = () => {
               {(searchTerm || selectedEco || showOnlyFavorites) && (
                 <button
                   onClick={clearFilters}
-                  className="px-8 py-4 bg-yellow-500 text-slate-900 font-semibold rounded-xl hover:bg-yellow-400 transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-yellow-500/25 border-2 border-yellow-500 hover:border-yellow-400"
+                  className="px-8 py-4 bg-yellow-500 text-slate-900 font-semibold rounded-xl hover:bg-yellow-400 transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-yellow-500/25 border-2 border-yellow-500 hover:border-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 focus:ring-offset-slate-900"
+                  aria-label="Clear search and filters"
                 >
                   Clear Search & Filters
                 </button>
@@ -472,7 +516,7 @@ const ExplorePage = () => {
             </div>
           </div>
         )}
-      </div>
+      </main>
       <ScrollToTop />
     </div>
   );
