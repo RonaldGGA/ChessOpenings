@@ -1,2 +1,22 @@
 @import "tailwindcss";
 
+/* Agregar a tu archivo CSS global */
+.message-bubble {
+  position: relative;
+}
+
+.message-bubble::before {
+  content: '';
+  position: absolute;
+  left: 12px;
+  top: -8px;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 8px solid rgba(30, 41, 59, 0.4);
+}
+
+.message-bubble:hover::before {
+  border-bottom-color: rgba(234, 179, 8, 0.3);
+}

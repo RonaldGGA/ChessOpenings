@@ -18,11 +18,7 @@ export function OpeningsList({
   metricKey 
 }: OpeningsListProps) {
   return (
-    <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-slate-700">
-      <h2 className="text-lg sm:text-xl font-bold text-yellow-400 mb-4 flex items-center">
-        <Icon className="h-5 w-5 mr-2 shrink-0" />
-        <span className="truncate">{title}</span>
-      </h2>
+   
       <div className="space-y-3">
         {openings.length > 0 ? (
           openings.map((opening) => (
@@ -71,6 +67,5 @@ export function OpeningsList({
           </div>
         )}
       </div>
-    </div>
   );
 }

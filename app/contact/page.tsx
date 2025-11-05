@@ -1,401 +1,308 @@
-"use client";
+import {
+  FaEnvelope,
+  FaTwitter,
+  FaGithub,
+  FaMapMarkerAlt,
+  FaStar,
+  FaQuoteLeft,
+  FaHeart,
+} from "react-icons/fa";
+import { Navigation } from "../components/navigation";
+import { Footer } from "../components/footer";
+import { FeedbackForm } from "../components/feedbackForm";
 
-import { 
-  FaEnvelope, 
-  FaTwitter, 
-  FaGithub, 
-  FaMapMarkerAlt, 
-  FaPaperPlane,
-  FaClock,
-  FaCheck,
-  FaExclamationTriangle
-} from 'react-icons/fa';
-import { Navigation } from '../components/navigation';
-import { Footer } from '../components/footer';
-import { useState } from 'react';
+// Types
+interface Feedback {
+  _id: string;
+  name: string;
+  email: string;
+  message: string;
+  rating: number;
+  isFeatured: boolean;
+  createdAt: string;
+}
 
-const ContactPage = () => {
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    subject: '',
-    message: ''
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
-  const [errorMessage, setErrorMessage] = useState('');
+interface ContactMethod {
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  description: string;
+  value: string;
+  link: string | null;
+}
 
-  const contactMethods = [
+// Server component - fetches data on the server
+async function getFeaturedFeedback(): Promise<Feedback[]> {
+  try {
+    const API_URL =
+      process.env.FEEDBACK_API_BASE_URL || "http://localhost:5000";
+    const response = await fetch(`${API_URL}/api/feedback`, {
+      next: { revalidate: 60 }, // Revalidate every 60 seconds
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    return result.success ? result.data : [];
+  } catch (error) {
+    console.error("Error loading featured feedback:", error);
+    return [];
+  }
+}
+
+// Server Component
+export default async function ContactPage() {
+  const featuredFeedback = await getFeaturedFeedback();
+
+  const contactMethods: ContactMethod[] = [
     {
       icon: FaEnvelope,
-      title: 'Email Us',
-      description: 'Send us an email anytime',
-      value: 'hello@chessmaster.com',
-      link: 'mailto:hello@chessmaster.com'
+      title: "Direct Email",
+      description: "Response within 24 hours",
+      value: "ronald.dearmass@gmail.com",
+      link: "mailto:ronald.dearmass@gmail.com",
     },
     {
       icon: FaTwitter,
-      title: 'Twitter',
-      description: 'Follow and message us',
-      value: '@chessmaster',
-      link: 'https://twitter.com/chessmaster'
+      title: "Twitter",
+      description: "Follow for updates",
+      value: "@RonaldGGA06",
+      link: "https://twitter.com/RonaldGGA06",
     },
     {
       icon: FaGithub,
-      title: 'GitHub',
-      description: 'Check out our projects',
-      value: 'github.com/chessmaster',
-      link: 'https://github.com/chessmaster'
+      title: "GitHub",
+      description: "Check out my code",
+      value: "github.com/RonaldGGA",
+      link: "https://github.com/RonaldGGA/ChessMaster.git",
     },
     {
       icon: FaMapMarkerAlt,
-      title: 'Based In',
-      description: 'Our headquarters',
-      value: 'Global Remote Team',
-      link: null
-    }
+      title: "Location",
+      description: "Available remotely",
+      value: "📍 Remote Work",
+      link: null,
+    },
   ];
 
-  const faqs = [
-    {
-      question: 'Is ChessMaster completely free?',
-      answer: 'Yes, ChessMaster is completely free to use. We believe in making quality chess education accessible to everyone.'
-    },
-    {
-      question: 'How often is the opening database updated?',
-      answer: 'Our opening database is continuously updated with new variations and analysis from professional games.'
-    },
-    {
-      question: 'Can I suggest new features?',
-      answer: 'Absolutely! We welcome feature suggestions from our community. Contact us through any channel.'
-    },
-    {
-      question: 'Do you offer premium coaching?',
-      answer: 'Currently we focus on providing free tools, but we may introduce premium coaching services in the future.'
-    }
-  ];
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { id, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [id]: value
-    }));
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setSubmitStatus('idle');
-    setErrorMessage('');
-
-    try {
-      // Reemplaza esta URL con la de tu API real
-      const API_URL = process.env.NEXT_PUBLIC_CONTACT_API_URL || '/api/contact';
-      
-      const response = await fetch(API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          // Estructura del objeto que se enviará a tu API
-          firstName: formData.firstName.trim(),
-          lastName: formData.lastName.trim(),
-          email: formData.email.trim(),
-          subject: formData.subject,
-          message: formData.message.trim(),
-          timestamp: new Date().toISOString(),
-          source: 'chessmaster-website'
-        }),
-      });
-
-      if (response.ok) {
-        setSubmitStatus('success');
-        // Resetear el formulario
-        setFormData({
-          firstName: '',
-          lastName: '',
-          email: '',
-          subject: '',
-          message: ''
-        });
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-      }
-    } catch (error) {
-      console.error('Error submitting form:', error);
-      setSubmitStatus('error');
-      setErrorMessage(
-        error instanceof Error 
-          ? error.message 
-          : 'Failed to send message. Please try again later.'
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // Componente para mostrar el estado del envío
-  const SubmitStatusMessage = () => {
-    if (submitStatus === 'success') {
-      return (
-        <div className="mb-6 p-4 bg-green-500/20 border border-green-500/30 rounded-xl animate-fade-in">
-          <div className="flex items-center space-x-3">
-            <FaCheck className="h-5 w-5 text-green-400 shrink-0" />
-            <div>
-              <p className="text-green-400 font-medium">Message sent successfully!</p>
-              <p className="text-green-300 text-sm mt-1">
-                Thank you for contacting us. We&apos;ll get back to you as soon as possible.
-              </p>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    if (submitStatus === 'error') {
-      return (
-        <div className="mb-6 p-4 bg-red-500/20 border border-red-500/30 rounded-xl animate-fade-in">
-          <div className="flex items-start space-x-3">
-            <FaExclamationTriangle className="h-5 w-5 text-red-400 mt-0.5 shrink-0" />
-            <div>
-              <p className="text-red-400 font-medium">Failed to send message</p>
-              <p className="text-red-300 text-sm mt-1">
-                {errorMessage || 'Please try again later or contact us through other channels.'}
-              </p>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    return null;
-  };
-
+const StarRating = ({ rating }: { rating: number }) => {
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-900 via-purple-900 to-slate-900 text-white flex flex-col">
-      <Navigation />
-      
-      <main className="flex-1 container mx-auto px-4 py-8 md:py-16">
-        {/* Hero Section */}
-        <div className="text-center max-w-4xl mx-auto mb-16">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">
-            <span className="bg-linear-to-r from-yellow-400 via-orange-500 to-yellow-400 bg-clip-text text-transparent bg-size-200 animate-gradient">
-              Get In Touch
-            </span>
-          </h1>
-          <p className="text-lg md:text-xl text-gray-300 leading-relaxed">
-            Have questions, suggestions, or need support? We&apos;d love to hear from you. 
-            Reach out through any of the channels below.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
-          {/* Contact Information */}
-          <div>
-            <h2 className="text-3xl font-bold mb-8 text-white">Contact Information</h2>
-            
-            {/* Contact Methods */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-              {contactMethods.map((method, index) => (
-                <div 
-                  key={index}
-                  className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 border border-slate-700 hover:border-yellow-500/50 transition-all duration-300"
-                >
-                  <div className="flex items-center mb-4">
-                    <div className="p-3 bg-yellow-500/10 rounded-xl border border-yellow-500/20 mr-4">
-                      <method.icon className="h-6 w-6 text-yellow-400" />
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-white text-lg">{method.title}</h3>
-                      <p className="text-gray-400 text-sm">{method.description}</p>
-                    </div>
-                  </div>
-                  {method.link ? (
-                    <a 
-                      href={method.link}
-                      className="text-yellow-400 hover:text-yellow-300 transition-colors text-sm"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {method.value}
-                    </a>
-                  ) : (
-                    <p className="text-gray-300 text-sm">{method.value}</p>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            {/* Support Hours */}
-            <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 border border-slate-700">
-              <div className="flex items-center mb-4">
-                <div className="p-3 bg-green-500/10 rounded-xl border border-green-500/20 mr-4">
-                  <FaClock className="h-6 w-6 text-green-400" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-white text-lg">Support Hours</h3>
-                  <p className="text-gray-400 text-sm">When you can reach our team</p>
-                </div>
-              </div>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-300">Monday - Friday</span>
-                  <span className="text-yellow-400">9:00 AM - 6:00 PM UTC</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-300">Saturday - Sunday</span>
-                  <span className="text-yellow-400">10:00 AM - 4:00 PM UTC</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Contact Form */}
-          <div>
-            <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-8 border border-slate-700">
-              <h2 className="text-3xl font-bold mb-6 text-white">Send us a Message</h2>
-              
-              {/* Status Messages */}
-              <SubmitStatusMessage />
-              
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="firstName" className="block text-sm font-medium text-gray-300 mb-2">
-                      First Name *
-                    </label>
-                    <input
-                      type="text"
-                      id="firstName"
-                      value={formData.firstName}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 text-white placeholder-gray-500 transition-colors"
-                      placeholder="Your first name"
-                      required
-                      disabled={isSubmitting}
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="lastName" className="block text-sm font-medium text-gray-300 mb-2">
-                      Last Name *
-                    </label>
-                    <input
-                      type="text"
-                      id="lastName"
-                      value={formData.lastName}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 text-white placeholder-gray-500 transition-colors"
-                      placeholder="Your last name"
-                      required
-                      disabled={isSubmitting}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
-                    Email Address *
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 text-white placeholder-gray-500 transition-colors"
-                    placeholder="your.email@example.com"
-                    required
-                    disabled={isSubmitting}
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="subject" className="block text-sm font-medium text-gray-300 mb-2">
-                    Subject *
-                  </label>
-                  <select
-                    id="subject"
-                    value={formData.subject}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 text-white transition-colors"
-                    required
-                    disabled={isSubmitting}
-                  >
-                    <option value="">Select a subject</option>
-                    <option value="support">Technical Support</option>
-                    <option value="feature">Feature Request</option>
-                    <option value="bug">Bug Report</option>
-                    <option value="partnership">Partnership</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label htmlFor="message" className="block text-sm font-medium text-gray-300 mb-2">
-                    Message *
-                  </label>
-                  <textarea
-                    id="message"
-                    rows={5}
-                    value={formData.message}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 text-white placeholder-gray-500 transition-colors resize-vertical"
-                    placeholder="Tell us how we can help you or just tell us your thoughts :)"
-                    required
-                    disabled={isSubmitting}
-                  ></textarea>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full px-8 py-4 bg-yellow-500 text-slate-900 font-semibold rounded-xl hover:bg-yellow-400 transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-yellow-500/25 border-2 border-yellow-500 hover:border-yellow-400 flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-slate-900"></div>
-                      Sending...
-                    </>
-                  ) : (
-                    <>
-                      <FaPaperPlane className="h-5 w-5" />
-                      Send Message
-                    </>
-                  )}
-                </button>
-                
-                <p className="text-gray-400 text-xs text-center">
-                  * Required fields
-                </p>
-              </form>
-            </div>
-          </div>
-        </div>
-
-        {/* FAQ Section */}
-        <div className="max-w-4xl mx-auto mt-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 text-white">
-            Frequently Asked Questions
-          </h2>
-          <div className="space-y-4">
-            {faqs.map((faq, index) => (
-              <div 
-                key={index}
-                className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 border border-slate-700"
-              >
-                <h3 className="font-bold text-white text-lg mb-2">{faq.question}</h3>
-                <p className="text-gray-300">{faq.answer}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </main>
-      <Footer/>
+    <div className="flex space-x-0.5">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <FaStar
+          key={star}
+          className={`w-3 h-3 ${
+            star <= rating 
+              ? 'text-yellow-400 fill-current' 
+              : 'text-gray-600 fill-gray-600'
+          }`}
+        />
+      ))}
     </div>
   );
 };
 
-export default ContactPage;
+  return (
+    <div className="min-h-screen bg-linear-to-br from-slate-900 via-purple-900 to-slate-900 text-white flex flex-col">
+      <Navigation />
+
+      <main className="flex-1 container mx-auto px-4 py-8 md:py-16">
+        {/* Hero Section */}
+        <div className="text-center max-w-4xl mx-auto mb-16">
+          <h1 className="text-4xl md:text-6xl font-bold mb-6">
+            <span className="bg-linear-to-r from-yellow-400 via-orange-500 to-yellow-400 bg-clip-text text-transparent">
+              Your Opinion Matters
+            </span>
+          </h1>
+          <p className="text-lg md:text-xl text-gray-300 leading-relaxed mb-8">
+            Did you like my work? Do you have ideas for improvement?
+            <span className="text-yellow-400 block mt-2">
+              Leave your feedback and help this portfolio grow!
+            </span>
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
+          {/* Left Column - Featured Feedback */}
+          <div>
+            <h2 className="text-3xl font-bold mb-8 text-white">
+              What Others Say
+              <FaQuoteLeft className="inline ml-3 text-yellow-400 w-6 h-6" />
+            </h2>
+
+            {/* Featured Feedback - Messaging Style */}
+            <div className="space-y-3 mb-8">
+              {featuredFeedback.length > 0 ? (
+                featuredFeedback.map((feedback) => (
+                  <article
+                    key={feedback._id}
+                    className="bg-slate-800/40 backdrop-blur-sm rounded-2xl p-4 border border-slate-700/50 hover:border-yellow-500/30 transition-all duration-200 message-bubble"
+                  >
+                    {/* Message Header */}
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center space-x-3">
+                        {/* User Avatar */}
+                        <div className="w-8 h-8 bg-linear-to-br from-yellow-500 to-orange-500 rounded-full flex items-center justify-center">
+                          <span className="text-white text-xs font-bold">
+                            {feedback.name
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")
+                              .toUpperCase()}
+                          </span>
+                        </div>
+
+                        {/* User Info */}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-white font-semibold text-sm truncate">
+                            {feedback.name}
+                          </h3>
+                          <div className="flex items-center space-x-2">
+                            <StarRating rating={feedback.rating} />
+                            <span className="text-yellow-400 text-xs">
+                              {feedback.rating}/5
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Time */}
+                      <time
+                        className="text-gray-500 text-xs whitespace-nowrap ml-2"
+                        dateTime={feedback.createdAt}
+                      >
+                        {formatDate(feedback.createdAt)}
+                      </time>
+                    </div>
+
+                    {/* Message Content */}
+                    <div className="pl-11">
+                      {/* Offset to align with avatar */}
+                      <blockquote className="text-gray-200 text-sm leading-relaxed">
+                        {feedback.message}
+                      </blockquote>
+                      {/* Message Footer */}
+                      <div className="flex items-center justify-between mt-3 pt-2 border-t border-slate-700/30">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-gray-500 text-xs">
+                            {feedback.email}
+                          </span>
+                          {feedback.isFeatured && (
+                            <span className="flex items-center text-yellow-400 text-xs">
+                              <FaHeart className="w-3 h-3 mr-1" />
+                              Featured
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Quick Actions */}
+                        <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button className="text-gray-500 hover:text-yellow-400 transition-colors p-1">
+                            <FaHeart className="w-3 h-3" />
+                          </button>
+                          <button className="text-gray-500 hover:text-yellow-400 transition-colors p-1">
+                            <svg
+                              className="w-3 h-3"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </article>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-400">
+                  <div className="w-16 h-16 bg-slate-800/50 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <FaQuoteLeft className="w-6 h-6 opacity-50" />
+                  </div>
+                  <p className="text-sm font-medium">No feedback yet</p>
+                  <p className="text-xs mt-1">
+                    Be the first to share your thoughts!
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Contact Methods */}
+            <section className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 border border-slate-700">
+              <h3 className="text-xl font-bold mb-6 text-white">
+                Other Channels
+              </h3>
+              <div className="space-y-4">
+                {contactMethods.map((method, index) => {
+                  const Icon = method.icon;
+                  return (
+                    <div key={index} className="flex items-center">
+                      <div className="p-3 bg-yellow-500/10 rounded-xl border border-yellow-500/20 mr-4">
+                        <Icon className="h-5 w-5 text-yellow-400" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-white">
+                          {method.title}
+                        </h4>
+                        <p className="text-gray-400 text-sm">
+                          {method.description}
+                        </p>
+                      </div>
+                      {method.link ? (
+                        <a
+                          href={method.link}
+                          className="text-yellow-400 hover:text-yellow-300 transition-colors text-sm font-medium px-3 py-1 rounded-lg hover:bg-yellow-400/10"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          Contact
+                        </a>
+                      ) : (
+                        <span className="text-gray-400 text-sm">
+                          {method.value}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          </div>
+
+          {/* Right Column - Feedback Form (Client Component) */}
+          <div>
+            <FeedbackForm />
+          </div>
+        </div>
+
+        {/* Call to Action */}
+        <section className="max-w-4xl mx-auto mt-16 text-center">
+          <div className="bg-linear-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/20 rounded-2xl p-8">
+            <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
+              Ready to work together?
+            </h2>
+            <p className="text-gray-300 mb-6">
+              If you liked my work, let&apos;s talk about your next project
+            </p>
+            <a
+              href="#feedback-form"
+              className="inline-block px-8 py-3 bg-yellow-500 text-slate-900 font-semibold rounded-xl hover:bg-yellow-400 transition-all duration-300 border-2 border-yellow-500 hover:border-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 focus:ring-offset-slate-800"
+            >
+              Start Conversation
+            </a>
+          </div>
+        </section>
+      </main>
+      <Footer />
+    </div>
+  );
+}
