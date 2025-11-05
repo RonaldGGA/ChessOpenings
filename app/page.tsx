@@ -3,14 +3,12 @@ import { FaChessBoard, FaSearch, FaChartLine } from "react-icons/fa";
 import { Navigation } from "./components/navigation";
 import { Footer } from "./components/footer";
 import HomeToast from "./components/homeToast";
-import GoogleOneTap from "./components/googleOneTap";
 
 const HomePage = () => {
   return (
     <div className="min-h-screen bg-linear-to-br from-slate-900 via-purple-900 to-slate-900 text-white flex flex-col">
       {/* Navigation - Professional and clean */}
       <Navigation />
-      <GoogleOneTap />
       <HomeToast />
 
       {/* Hero Section */}

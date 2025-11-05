@@ -51,35 +51,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         };
       },
     }),
-    // Proveedor específico para Google One Tap
-    {
-      id: "google-onetap",
-      name: "Google One Tap",
-      type: "oauth",
-      version: "2.0",
-      checks: ["pkce", "state"],
-      authorization: {
-        url: "https://accounts.google.com/o/oauth2/v2/auth",
-        params: {
-          scope: "openid email profile",
-          response_type: "code",
-          prompt: "consent",
-        },
-      },
-      token: "https://oauth2.googleapis.com/token",
-      userinfo: "https://openidconnect.googleapis.com/v1/userinfo",
-      async profile(profile) {
-        return {
-          id: profile.sub,
-          name: profile.name,
-          email: profile.email,
-          image: profile.picture,
-        };
-      },
-      clientId: process.env.GOOGLE_ID!,
-      clientSecret: process.env.GOOGLE_SECRET!,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as OAuthConfig<any>,
     CredentialsProvider({
       name: "credentials",
       credentials: {
