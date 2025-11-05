@@ -30,7 +30,7 @@ export default function UserButton() {
     return (
       <div className="flex items-center space-x-3">
         {/* User Info */}
-        <div className="flex items-center space-x-3">
+        <div className="items-center space-x-3 flex md:hidden lg:flex">
           {session.user.image ? (
             <Image
               src={session.user.image}
