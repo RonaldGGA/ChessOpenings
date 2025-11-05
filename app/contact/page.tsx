@@ -34,7 +34,7 @@ interface ContactMethod {
 async function getFeaturedFeedback(): Promise<Feedback[]> {
   try {
     const API_URL =
-      process.env.FEEDBACK_API_BASE_URL || "http://localhost:5000";
+      process.env.FEEDBACK_API_BASE_URL || "https://feedbackapi-production-eaaf.up.railway.app";
     const response = await fetch(`${API_URL}/api/feedback`, {
       next: { revalidate: 60 }, // Revalidate every 60 seconds
     });
