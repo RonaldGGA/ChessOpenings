@@ -21,7 +21,7 @@ export const Footer = () => {
             </p>
             <div className="flex items-center space-x-4">
               <a
-                href="https://github.com"
+                href="https://github.com/RonaldGGA/ChessMaster"
                 className="text-gray-400 hover:text-yellow-400 transition-colors"
               >
                 <FaGithub className="h-5 w-5" />
