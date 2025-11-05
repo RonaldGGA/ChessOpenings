@@ -1,3 +1,5 @@
+import { Key } from "lucide-react";
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {

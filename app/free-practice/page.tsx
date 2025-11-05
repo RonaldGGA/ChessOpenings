@@ -174,7 +174,10 @@ const FreePracticePage = () => {
     return (
       <div className="min-h-screen bg-linear-to-br from-slate-900 via-purple-900 to-slate-900 text-white flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-yellow-400 mx-auto mb-4"></div>
+          <div 
+            className="animate-spin rounded-full h-16 w-16 border-b-2 border-yellow-400 mx-auto mb-4" 
+            aria-hidden="true"
+          ></div>
           <p className="text-gray-400 text-lg">Loading chess board...</p>
         </div>
       </div>
@@ -183,12 +186,18 @@ const FreePracticePage = () => {
 
   if (isFullscreen) {
     return (
-      <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div 
+        className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+        role="dialog"
+        aria-label="Full screen chess board"
+        aria-modal="true"
+      >
         <button
           onClick={() => setIsFullscreen(false)}
-          className="absolute top-6 right-6 z-50 cursor-pointer hover:bg-gray-600 text-white p-2 rounded-full shadow-lg transition-colors border-2 border-white/20"
+          className="absolute top-6 right-6 z-50 cursor-pointer hover:bg-gray-600 text-white p-2 rounded-full shadow-lg transition-colors border-2 border-white/20 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 focus:ring-offset-black"
+          aria-label="Exit full screen mode"
         >
-          <X className="h-6 w-6" />
+          <X className="h-6 w-6" aria-hidden="true" />
         </button>
 
         <div className="flex items-center justify-center w-full h-full">
@@ -210,9 +219,9 @@ const FreePracticePage = () => {
       <Navigation />
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8">
         {/* Header */}
-        <div className="text-center mb-8">
+        <header className="text-center mb-8">
           <h1 className="text-4xl font-bold bg-linear-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent mb-4">
             Free Practice Board
           </h1>
@@ -227,27 +236,40 @@ const FreePracticePage = () => {
               </p>
             </div>
           )}
-        </div>
+        </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Related Openings - Left Panel */}
           {showLeftPanel && (
-            <div className={`${leftPanelCols} order-2 lg:order-1`}>
+            <section 
+              className={`${leftPanelCols} order-2 lg:order-1`}
+              aria-labelledby="related-openings-heading"
+            >
+              <h2 id="related-openings-heading" className="sr-only">
+                Related Chess Openings
+              </h2>
               <RelatedOpeningsPanel relatedOpenings={relatedOpenings} />
-            </div>
+            </section>
           )}
 
           {/* Chess Board - Center */}
-          <div className={`${boardCols} order-1 lg:order-2`}>
+          <section 
+            className={`${boardCols} order-1 lg:order-2`}
+            aria-labelledby="chess-board-heading"
+          >
+            <h2 id="chess-board-heading" className="sr-only">
+              Chess Practice Board
+            </h2>
             <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 border border-slate-700">
               {/* Controls */}
               <div className="flex mb-6 gap-4 justify-between items-center">
                 <div className="flex gap-4 max-h-10">
                   <button
                     onClick={handleReset}
-                    className="px-4 py-2 bg-yellow-500 text-slate-900 font-semibold rounded-xl hover:bg-yellow-400 transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-yellow-500/25 border-2 border-yellow-500 hover:border-yellow-400 flex items-center gap-2"
+                    className="px-4 py-2 bg-yellow-500 text-slate-900 font-semibold rounded-xl hover:bg-yellow-400 transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-yellow-500/25 border-2 border-yellow-500 hover:border-yellow-400 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 focus:ring-offset-slate-900"
+                    aria-label={openingFen ? "Reload opening position" : "Reset chess board to starting position"}
                   >
-                    <RotateCw className="h-4 w-4" />
+                    <RotateCw className="h-4 w-4" aria-hidden="true" />
                     <span className="hidden md:block">
                       {openingFen ? "Reload Opening" : "Reset"}
                     </span>
@@ -255,42 +277,61 @@ const FreePracticePage = () => {
                   <button
                     onClick={handleSaveSession}
                     disabled={isSaving || movesHistory.length === 0}
-                    className="px-4 py-2 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-500 transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-green-500/25 border-2 border-green-600 hover:border-green-500 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-4 py-2 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-500 transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-green-500/25 border-2 border-green-600 hover:border-green-500 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2 focus:ring-offset-slate-900"
+                    aria-label={isSaving ? "Saving practice session" : "Save current practice session"}
+                    aria-disabled={isSaving || movesHistory.length === 0}
                   >
-                    <Save className="h-4 w-4" />
+                    <Save className="h-4 w-4" aria-hidden="true" />
                     <span className="hidden md:block">
                       {isSaving ? "Saving..." : "Save Session"}
                     </span>
                   </button>
                   <button
                     onClick={() => setIsFullscreen(true)}
-                    className="flex items-center space-x-2 px-4 py-2 bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-semibold rounded-lg transition-colors"
+                    className="flex items-center space-x-2 px-4 py-2 bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-semibold rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 focus:ring-offset-slate-900"
+                    aria-label="Enter full screen mode for chess board"
                   >
-                    <Maximize2 className="h-4 w-4" />
+                    <Maximize2 className="h-4 w-4" aria-hidden="true" />
                     <span className="hidden md:block">Full Screen</span>
                   </button>
                 </div>
                 <div className="flex gap-4 max-h-10">
                   {/* CPU Thinking Indicator */}
                   {isCpuThinking ? (
-                    <div className="flex items-center space-x-2 px-3 py-2 bg-purple-500/20 text-purple-300 rounded-lg border border-purple-500/30">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-400"></div>
+                    <div 
+                      className="flex items-center space-x-2 px-3 py-2 bg-purple-500/20 text-purple-300 rounded-lg border border-purple-500/30"
+                      role="status"
+                      aria-live="polite"
+                      aria-label="Computer is thinking"
+                    >
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-400" aria-hidden="true"></div>
                       <span className="text-sm">CPU...</span>
                     </div>
                   ) : isAnalyzing ? (
-                    <div className="flex items-center space-x-2 px-3 py-2 bg-purple-500/20 text-purple-300 rounded-lg border border-purple-500/30">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-400"></div>
+                    <div 
+                      className="flex items-center space-x-2 px-3 py-2 bg-purple-500/20 text-purple-300 rounded-lg border border-purple-500/30"
+                      role="status"
+                      aria-live="polite"
+                      aria-label="Analyzing position"
+                    >
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-400" aria-hidden="true"></div>
                     </div>
                   ) : settings.cpuSide !== "none" ? (
-                    <div className="flex items-center space-x-2 px-3 py-2 bg-green-500/20 text-green-300 rounded-lg border border-green-500/30">
+                    <div 
+                      className="flex items-center space-x-2 px-3 py-2 bg-green-500/20 text-green-300 rounded-lg border border-green-500/30"
+                      role="status"
+                      aria-live="polite"
+                      aria-label="Your turn to move"
+                    >
                       <span className="text-sm">Your turn</span>
                     </div>
                   ) : null}
                   <button
                     onClick={() => setOpenSettings(true)}
-                    className="flex items-center space-x-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-lg transition-colors border border-slate-600 hover:border-slate-500"
+                    className="flex items-center space-x-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-lg transition-colors border border-slate-600 hover:border-slate-500 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 focus:ring-offset-slate-900"
+                    aria-label="Open settings menu"
                   >
-                    <Settings2 className="h-4 w-4" />
+                    <Settings2 className="h-4 w-4" aria-hidden="true" />
                     <span className="hidden md:block">Settings</span>
                   </button>
                 </div>
@@ -299,7 +340,12 @@ const FreePracticePage = () => {
               <div className="bg-slate-800/50 rounded-2xl border border-slate-700 max-w-[500px] mx-auto shadow-lg shadow-black/30">
                 {/* Game Over Banner */}
                 {gameOver.isOver && (
-                  <div className="bg-linear-to-r from-yellow-500 to-orange-500 text-slate-900 text-center py-4 rounded-t-2xl">
+                  <div 
+                    className="bg-linear-to-r from-yellow-500 to-orange-500 text-slate-900 text-center py-4 rounded-t-2xl"
+                    role="alert"
+                    aria-live="assertive"
+                    aria-label={`Game over: ${gameOver.result}`}
+                  >
                     <div className="flex items-center justify-center space-x-2">
                       <span className="text-xl font-bold">
                         {gameOver.result}
@@ -310,36 +356,58 @@ const FreePracticePage = () => {
 
                 {/* Tablero */}
                 <div className="flex justify-center md:p-4">
-                  <Chessboard options={chessboardOptions} />
+                  <div 
+                    role="img" 
+                    aria-label="Chess board with current position"
+                    aria-describedby="chessboard-description"
+                  >
+                    <Chessboard options={chessboardOptions} />
+                  </div>
+                </div>
+                <div id="chessboard-description" className="sr-only">
+                  Interactive chess board for practice. Current position: {chessPosition}. 
+                  {gameOver.isOver ? ` Game over: ${gameOver.result}.` : " Game in progress."}
+                  {movesHistory.length > 0 ? ` ${movesHistory.length} moves played.` : " No moves played yet."}
                 </div>
               </div>
 
               {/* Move History */}
-
               {settings.showMoveHistory && (
-                <div className="mt-6">
+                <section 
+                  className="mt-6"
+                  aria-labelledby="move-history-heading"
+                >
+                  <h3 id="move-history-heading" className="sr-only">
+                    Move History
+                  </h3>
                   <MoveHistory
                     movesHistory={movesHistory}
                     isOpeningFen={openingFen}
                   />
-                </div>
+                </section>
               )}
             </div>
-          </div>
+          </section>
 
           {/* Move Analysis - Right Panel */}
           {showRightPanel && (
-            <div className={`${rightPanelCols} order-3`}>
+            <section 
+              className={`${rightPanelCols} order-3`}
+              aria-labelledby="analysis-panel-heading"
+            >
+              <h2 id="analysis-panel-heading" className="sr-only">
+                Chess Position Analysis
+              </h2>
               <AnalysisPanel
                 moveAnalysis={moveAnalysis}
                 isAnalyzing={isAnalyzing}
                 currentFen={chessPosition}
                 analysisDepth={settings.analysisDepth || 13}
               />
-            </div>
+            </section>
           )}
         </div>
-      </div>
+      </main>
 
       {/* Settings Modal */}
       <SettingsModal
