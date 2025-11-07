@@ -1,4 +1,4 @@
-// app/dashboard/components/LoadingError.tsx
+// app/dashboard/components/loadingError.tsx
 import Link from "next/link";
 
 interface LoadingErrorProps {
@@ -8,7 +8,7 @@ interface LoadingErrorProps {
 
 export function LoadingError({ type, message }: LoadingErrorProps) {
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-900 via-purple-900 to-slate-900 text-white flex items-center justify-center">
+    <div className="min-h-screen  text-white flex items-center justify-center">
       <div className="text-center">
         {type === 'loading' ? (
           <>

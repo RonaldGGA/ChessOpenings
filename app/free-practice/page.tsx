@@ -9,18 +9,16 @@ import RelatedOpeningsPanel from "./components/relatedOpeningsPanel";
 import MoveHistory from "./components/moveHistory";
 import AnalysisPanel from "./components/analysisPanel";
 import SettingsModal from "./components/settingsModal";
-import { useChessGame } from "../stores/useChessStore";
-import { useChessLogic } from "../hooks/useChessLogic";
-import { usePracticeSession } from "../hooks/usePracticeSession";
-import { Navigation } from "../components/navigation";
+import { useChessGame } from "../../stores/useChessStore";
+import { useChessLogic } from "../../hooks/useChessLogic";
+import { usePracticeSession } from "../../hooks/usePracticeSession";
 import { signIn, useSession } from "next-auth/react";
 
 const FreePracticePage = () => {
   const searchParams = useSearchParams();
   const openingFen = searchParams.get("openingFen");
-  const session = useSession()
-  
-  // Estado global del juego
+  const session = useSession();
+
   const {
     relatedOpenings,
     chessPosition,
@@ -35,7 +33,6 @@ const FreePracticePage = () => {
     settings,
     moveAnalysis,
 
-    // Acciones
     setIsFullscreen,
     onSquareClick,
     onPieceDrop,
@@ -45,15 +42,12 @@ const FreePracticePage = () => {
     resetBoard,
   } = useChessGame();
 
-  // Lógica del juego
   useChessLogic();
 
-  // Gestión de sesiones simplificada
   const { savePracticeSession } = usePracticeSession();
   const [openSettings, setOpenSettings] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Efecto para cargar la apertura desde la URL - SOLO UNA VEZ
   useEffect(() => {
     if (openingFen) {
       try {
@@ -69,26 +63,22 @@ const FreePracticePage = () => {
     }
   }, [openingFen, loadOpeningPosition]);
 
-  // Reset handler que considera las aperturas cargadas
   const handleReset = useCallback(() => {
     if (openingFen) {
-      // Si hay una apertura en la URL, recargar esa posición
       loadOpeningPosition(openingFen);
     } else {
-      // Si no hay apertura, reset normal
       resetBoard();
     }
   }, [openingFen, loadOpeningPosition, resetBoard]);
 
-  // Handler para guardar sesión
   const handleSaveSession = async () => {
     if (movesHistory.length === 0) {
       alert("No moves to save! Make some moves first.");
       return;
     }
-    if(!session.data?.user){
-      signIn(undefined, { callbackUrl: "/free-practice" })
-      return
+    if (!session.data?.user) {
+      signIn(undefined, { callbackUrl: "/free-practice" });
+      return;
     }
 
     setIsSaving(true);
@@ -99,20 +89,17 @@ const FreePracticePage = () => {
     }
   };
 
-  // Actualizar mejores movimientos desde el análisis
   useEffect(() => {
     setBestMove(moveAnalysis?.bestMove || "");
     setBestEnemyMove(moveAnalysis?.ponder || "");
   }, [moveAnalysis, setBestMove, setBestEnemyMove]);
 
-  // Tamaño del tablero en pantalla completa
   const getFullscreenBoardSize = () => {
     const maxWidth = window.innerWidth * 0.9;
     const maxHeight = window.innerHeight * 0.8;
     return Math.min(maxWidth, maxHeight, 800);
   };
 
-  // Determinar columnas del grid basado en paneles visibles
   const showLeftPanel = settings.showRelatedOpenings;
   const showRightPanel = settings.showAnalysis;
 
@@ -130,7 +117,6 @@ const FreePracticePage = () => {
     boardCols = "lg:col-span-12";
   }
 
-  // Configurar flechas
   const arrows = [];
   if (
     settings.showBestMoveArrow &&
@@ -172,10 +158,10 @@ const FreePracticePage = () => {
 
   if (chessPosition === "start") {
     return (
-      <div className="min-h-screen bg-linear-to-br from-slate-900 via-purple-900 to-slate-900 text-white flex items-center justify-center">
+      <div className="min-h-screen  text-white flex items-center justify-center">
         <div className="text-center">
-          <div 
-            className="animate-spin rounded-full h-16 w-16 border-b-2 border-yellow-400 mx-auto mb-4" 
+          <div
+            className="animate-spin rounded-full h-16 w-16 border-b-2 border-yellow-400 mx-auto mb-4"
             aria-hidden="true"
           ></div>
           <p className="text-gray-400 text-lg">Loading chess board...</p>
@@ -186,7 +172,7 @@ const FreePracticePage = () => {
 
   if (isFullscreen) {
     return (
-      <div 
+      <div
         className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4"
         role="dialog"
         aria-label="Full screen chess board"
@@ -215,9 +201,7 @@ const FreePracticePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
-      <Navigation />
-
+    <div className="min-h-screen  text-white">
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         {/* Header */}
@@ -241,7 +225,7 @@ const FreePracticePage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Related Openings - Left Panel */}
           {showLeftPanel && (
-            <section 
+            <section
               className={`${leftPanelCols} order-2 lg:order-1`}
               aria-labelledby="related-openings-heading"
             >
@@ -253,7 +237,7 @@ const FreePracticePage = () => {
           )}
 
           {/* Chess Board - Center */}
-          <section 
+          <section
             className={`${boardCols} order-1 lg:order-2`}
             aria-labelledby="chess-board-heading"
           >
@@ -267,7 +251,11 @@ const FreePracticePage = () => {
                   <button
                     onClick={handleReset}
                     className="px-4 py-2 bg-yellow-500 text-slate-900 font-semibold rounded-xl hover:bg-yellow-400 transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-yellow-500/25 border-2 border-yellow-500 hover:border-yellow-400 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 focus:ring-offset-slate-900"
-                    aria-label={openingFen ? "Reload opening position" : "Reset chess board to starting position"}
+                    aria-label={
+                      openingFen
+                        ? "Reload opening position"
+                        : "Reset chess board to starting position"
+                    }
                   >
                     <RotateCw className="h-4 w-4" aria-hidden="true" />
                     <span className="hidden md:block">
@@ -278,7 +266,11 @@ const FreePracticePage = () => {
                     onClick={handleSaveSession}
                     disabled={isSaving || movesHistory.length === 0}
                     className="px-4 py-2 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-500 transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-green-500/25 border-2 border-green-600 hover:border-green-500 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2 focus:ring-offset-slate-900"
-                    aria-label={isSaving ? "Saving practice session" : "Save current practice session"}
+                    aria-label={
+                      isSaving
+                        ? "Saving practice session"
+                        : "Save current practice session"
+                    }
                     aria-disabled={isSaving || movesHistory.length === 0}
                   >
                     <Save className="h-4 w-4" aria-hidden="true" />
@@ -296,36 +288,6 @@ const FreePracticePage = () => {
                   </button>
                 </div>
                 <div className="flex gap-4 max-h-10">
-                  {/* CPU Thinking Indicator */}
-                  {isCpuThinking ? (
-                    <div 
-                      className="flex items-center space-x-2 px-3 py-2 bg-purple-500/20 text-purple-300 rounded-lg border border-purple-500/30"
-                      role="status"
-                      aria-live="polite"
-                      aria-label="Computer is thinking"
-                    >
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-400" aria-hidden="true"></div>
-                      <span className="text-sm">CPU...</span>
-                    </div>
-                  ) : isAnalyzing ? (
-                    <div 
-                      className="flex items-center space-x-2 px-3 py-2 bg-purple-500/20 text-purple-300 rounded-lg border border-purple-500/30"
-                      role="status"
-                      aria-live="polite"
-                      aria-label="Analyzing position"
-                    >
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-400" aria-hidden="true"></div>
-                    </div>
-                  ) : settings.cpuSide !== "none" ? (
-                    <div 
-                      className="flex items-center space-x-2 px-3 py-2 bg-green-500/20 text-green-300 rounded-lg border border-green-500/30"
-                      role="status"
-                      aria-live="polite"
-                      aria-label="Your turn to move"
-                    >
-                      <span className="text-sm">Your turn</span>
-                    </div>
-                  ) : null}
                   <button
                     onClick={() => setOpenSettings(true)}
                     className="flex items-center space-x-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-lg transition-colors border border-slate-600 hover:border-slate-500 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 focus:ring-offset-slate-900"
@@ -340,7 +302,7 @@ const FreePracticePage = () => {
               <div className="bg-slate-800/50 rounded-2xl border border-slate-700 max-w-[500px] mx-auto shadow-lg shadow-black/30">
                 {/* Game Over Banner */}
                 {gameOver.isOver && (
-                  <div 
+                  <div
                     className="bg-linear-to-r from-yellow-500 to-orange-500 text-slate-900 text-center py-4 rounded-t-2xl"
                     role="alert"
                     aria-live="assertive"
@@ -356,8 +318,8 @@ const FreePracticePage = () => {
 
                 {/* Tablero */}
                 <div className="flex justify-center md:p-4">
-                  <div 
-                    role="img" 
+                  <div
+                    role="img"
                     aria-label="Chess board with current position"
                     aria-describedby="chessboard-description"
                   >
@@ -365,15 +327,20 @@ const FreePracticePage = () => {
                   </div>
                 </div>
                 <div id="chessboard-description" className="sr-only">
-                  Interactive chess board for practice. Current position: {chessPosition}. 
-                  {gameOver.isOver ? ` Game over: ${gameOver.result}.` : " Game in progress."}
-                  {movesHistory.length > 0 ? ` ${movesHistory.length} moves played.` : " No moves played yet."}
+                  Interactive chess board for practice. Current position:{" "}
+                  {chessPosition}.
+                  {gameOver.isOver
+                    ? ` Game over: ${gameOver.result}.`
+                    : " Game in progress."}
+                  {movesHistory.length > 0
+                    ? ` ${movesHistory.length} moves played.`
+                    : " No moves played yet."}
                 </div>
               </div>
 
               {/* Move History */}
               {settings.showMoveHistory && (
-                <section 
+                <section
                   className="mt-6"
                   aria-labelledby="move-history-heading"
                 >
@@ -391,7 +358,7 @@ const FreePracticePage = () => {
 
           {/* Move Analysis - Right Panel */}
           {showRightPanel && (
-            <section 
+            <section
               className={`${rightPanelCols} order-3`}
               aria-labelledby="analysis-panel-heading"
             >

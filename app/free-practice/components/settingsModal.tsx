@@ -13,7 +13,7 @@ import {
   BookOpen,
 } from "lucide-react";
 import { FaChessBoard } from "react-icons/fa";
-import { useChessGame } from "@/app/stores/useChessStore";
+import { useChessGame } from "@/stores/useChessStore";
 
 interface SettingsModalProps {
   openSettings:boolean,
@@ -29,25 +29,21 @@ const SettingsModal:React.FC<SettingsModalProps> = ({openSettings, setOpenSettin
 
   const [localSettings, setLocalSettings] = useState(settings);
 
-  // Sincronizar localSettings cuando cambien las settings del store
   useEffect(() => {
     setLocalSettings(settings);
   }, [settings]);
 
-  // Manejar cambios individuales de settings
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleSettingChange = (key: keyof typeof settings, value: any) => {
     const newSettings = { ...localSettings, [key]: value };
     setLocalSettings(newSettings);
   };
 
-  // Guardar y cerrar
   const handleSaveAndClose = () => {
     updateSettings(localSettings);
     setOpenSettings(false);
   };
 
-  // Reset a valores por defecto
   const handleReset = () => {
     const defaultSettings = {
       showBestMoveArrow: true,
@@ -63,10 +59,8 @@ const SettingsModal:React.FC<SettingsModalProps> = ({openSettings, setOpenSettin
     updateSettings(defaultSettings);
   };
 
-  // Cerrar sin guardar
   const handleClose = () => {
     setOpenSettings(false);
-    // Restaurar settings originales si se canceló
     setLocalSettings(settings);
   };
 

@@ -1,4 +1,4 @@
-// app/dashboard/components/OpeningsList.tsx
+// app/dashboard/components/openingsList.tsx
 import Link from "next/link";
 import { Star } from "lucide-react";
 import { FcStatistics } from "react-icons/fc";

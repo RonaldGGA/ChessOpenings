@@ -3,9 +3,10 @@ import { auth } from '@/auth';
 import prisma from '@/lib/prisma';
 import { NextRequest, NextResponse } from 'next/server';
 
+/**Creates an openingVisit node and Increments the number of visits accordingly
+*/
 export async function POST(request: NextRequest) {
   const session = await auth();
-  console.log("Im here in the api, saving the visit...")
 
   if (!session || !session.user?.email) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -26,7 +27,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Buscar si ya existe una visita para este usuario y apertura
     const existingVisit = await prisma.openingVisit.findUnique({
       where: {
         userId_openingId: {
@@ -37,7 +37,6 @@ export async function POST(request: NextRequest) {
     });
 
     if (existingVisit) {
-      // Actualizar la visita existente: incrementar count y updatedAt
       await prisma.openingVisit.update({
         where: {
           userId_openingId: {
@@ -51,7 +50,6 @@ export async function POST(request: NextRequest) {
         },
       });
     } else {
-      // Crear una nueva visita
       await prisma.openingVisit.create({
         data: {
           userId: user.id,
@@ -60,7 +58,6 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Incrementar el contador total de visitas en Opening
     await prisma.opening.update({
       where: { id: openingId },
       data: {
@@ -75,9 +72,9 @@ export async function POST(request: NextRequest) {
   }
 }
 
+/**Returns the visited openings by the user and the total of openings visited */
 export async function GET(request: NextRequest) {
   const session = await auth()
-  console.log("Im here, getting the visits")
 
   if (!session || !session.user?.email) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

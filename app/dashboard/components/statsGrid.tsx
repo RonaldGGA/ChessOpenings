@@ -1,4 +1,4 @@
-// app/dashboard/components/StatsGrid.tsx
+// app/dashboard/components/statsGrid.tsx
 import { Star, Eye, Clock } from "lucide-react";
 import { DashboardData } from "../../../types";
 

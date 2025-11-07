@@ -1,6 +1,6 @@
 // hooks/useChessLogic.ts
-import { useCallback, useEffect } from 'react';
-import { useChessGame } from '../stores/useChessStore';
+import { useCallback, useEffect } from "react";
+import { useChessGame } from "../stores/useChessStore";
 
 interface StockfishAnalysis {
   bestMove: string;
@@ -29,66 +29,67 @@ export const useChessLogic = () => {
     setIsAnalyzing,
   } = useChessGame();
 
-  // Analizar posición con Stockfish
-  const analyzePosition = useCallback(async (fen: string) => {
-    if (isCpuThinking) return;
+  const analyzePosition = useCallback(
+    async (fen: string) => {
+      if (isCpuThinking) return;
 
-    setIsAnalyzing(true);
-    try {
-      const response = await fetch(
-        `https://stockfish.online/api/s/v2.php?fen=${encodeURIComponent(
-          fen
-        )}&depth=${settings?.analysisDepth ? settings.analysisDepth : 11}`
-      );
+      setIsAnalyzing(true);
+      try {
 
-      if (!response.ok) {
-        throw new Error(`Stockfish error: ${response.status}`);
+        /*External Api to get AI analysis for the current game fen*/
+        const response = await fetch(
+          `https://stockfish.online/api/s/v2.php?fen=${encodeURIComponent(
+            fen
+          )}&depth=${settings?.analysisDepth ? settings.analysisDepth : 11}`
+        );
+
+        if (!response.ok) {
+          throw new Error(`Stockfish error: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (!data.success) {
+          throw new Error("Error analyzing the position");
+        }
+
+        const bestMoveParts = data.bestmove?.split(" ") || [];
+        const newData: StockfishAnalysis = {
+          bestMove: bestMoveParts[1] || "",
+          ponder: bestMoveParts[3] || "",
+          evaluation: data.evaluation || "0",
+          continuation: data.continuation || "",
+          mate: data.mate,
+        };
+        setMoveAnalysis(newData);
+      } catch (error) {
+        console.error("Error analyzing position:", error);
+        setMoveAnalysis(null);
+      } finally {
+        setIsAnalyzing(false);
       }
+    },
+    [settings.analysisDepth, isCpuThinking, setMoveAnalysis, setIsAnalyzing]
+  );
 
-      const data = await response.json();
-
-      if (!data.success) {
-        throw new Error("Error analyzing the position");
+  const fetchRelatedOpenings = useCallback(
+    async (moves: string[]) => {
+      try {
+        const response = await fetch(
+          `/api/openings/match?moveHistory=${JSON.stringify(moves)}`
+        );
+        const data = await response.json();
+        setRelatedOpenings(data.openings || []);
+      } catch (error) {
+        console.error("Error fetching related openings:", error);
+        setRelatedOpenings([]);
       }
+    },
+    [setRelatedOpenings]
+  );
 
-      const bestMoveParts = data.bestmove?.split(" ") || [];
-      const newData: StockfishAnalysis = {
-        bestMove: bestMoveParts[1] || "",
-        ponder: bestMoveParts[3] || "",
-        evaluation: data.evaluation || "0",
-        continuation: data.continuation || "",
-        mate: data.mate,
-      };
-      setMoveAnalysis(newData);
-    } catch (error) {
-      console.error("Error analyzing position:", error);
-      setMoveAnalysis(null);
-    } finally {
-      setIsAnalyzing(false);
-    }
-  }, [settings.analysisDepth, isCpuThinking, setMoveAnalysis, setIsAnalyzing]);
-
-  // Buscar aperturas relacionadas
-  const fetchRelatedOpenings = useCallback(async (moves: string[]) => {
-    try {
-      const response = await fetch(
-        `/api/openings/match?moveHistory=${JSON.stringify(moves)}`
-      );
-      const data = await response.json();
-      setRelatedOpenings(data.openings || []);
-    } catch (error) {
-      console.error("Error fetching related openings:", error);
-      setRelatedOpenings([]);
-    }
-  }, [setRelatedOpenings]);
-
-  // Movimiento del CPU
   const makeCpuMove = useCallback(async () => {
-    if (
-      settings.cpuSide === "none" ||
-      chessGame.isGameOver() ||
-      isCpuThinking
-    )
+    if (settings.cpuSide === "none" || chessGame.isGameOver() || isCpuThinking)
       return;
 
     const currentTurn = chessGame.turn();
@@ -139,7 +140,6 @@ export const useChessLogic = () => {
     setIsCpuThinking,
   ]);
 
-  // Verificar estado del juego
   const checkGameState = useCallback(() => {
     if (chessGame.isGameOver()) {
       let result = "";
@@ -162,17 +162,14 @@ export const useChessLogic = () => {
     }
   }, [chessGame, setGameOver]);
 
-  // Efecto para movimiento del CPU
   useEffect(() => {
     makeCpuMove();
   }, [makeCpuMove]);
 
-  // Efecto para verificar estado del juego
   useEffect(() => {
     checkGameState();
   }, [chessPosition, checkGameState]);
 
-  // Efecto para análisis y aperturas relacionadas
   useEffect(() => {
     if (
       chessPosition !== "start" &&
@@ -182,7 +179,14 @@ export const useChessLogic = () => {
       analyzePosition(chessPosition);
       fetchRelatedOpenings(movesHistory);
     }
-  }, [chessPosition, movesHistory, isCpuThinking, chessGame, analyzePosition, fetchRelatedOpenings]);
+  }, [
+    chessPosition,
+    movesHistory,
+    isCpuThinking,
+    chessGame,
+    analyzePosition,
+    fetchRelatedOpenings,
+  ]);
 
   return {
     analyzePosition,

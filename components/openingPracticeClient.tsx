@@ -1,4 +1,4 @@
-// components/OpeningPracticeClient.tsx
+// components/openingPracticeClient.tsx
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -14,7 +14,7 @@ import {
   Info,
   ArrowLeft,
 } from 'lucide-react';
-import { Alias, FromTo, Opening } from '../generated/prisma/client';
+import { Alias, FromTo, Opening } from '../app/generated/prisma/client';
 import { useRouter } from 'next/navigation';
 
 
@@ -113,7 +113,7 @@ export default function OpeningPracticeClient({
   return (
     <div
       key={opening?.id}
-      className="p-4 min-h-screen bg-linear-to-br from-slate-900 via-purple-900 to-slate-900 text-white"
+      className="p-4 min-h-screen  text-white"
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-8">

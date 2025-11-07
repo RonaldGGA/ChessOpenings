@@ -73,7 +73,6 @@ export function FeedbackForm() {
           message: '',
           rating: 5
         });
-        // Refresh the page to show new feedback
         setTimeout(() => window.location.reload(), 2000);
       } else {
         throw new Error(result.message || 'Failed to send message');

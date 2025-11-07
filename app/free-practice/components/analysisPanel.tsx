@@ -1,7 +1,7 @@
-// components/AnalysisPanel.tsx
+// components/analysisPanel.tsx
 "use client";
 
-import { useChessGame } from "@/app/stores/useChessStore";
+import { useChessGame } from "@/stores/useChessStore";
 import { Chess } from "chess.js";
 
 interface StockfishAnalysis {
@@ -27,7 +27,6 @@ const AnalysisPanel = ({
 }: AnalysisPanelProps) => {
   const { movesHistory } = useChessGame();
 
-  // Convert UCI moves to SAN notation
   const convertToSan = (
     uciMove: string,
     fen: string,
@@ -38,7 +37,6 @@ const AnalysisPanel = ({
       const chess = new Chess(fen);
 
       if (isPonder && bestMoveUci) {
-        // Para el ponder: primero aplicar la mejor jugada, luego el ponder
         const bestMove = chess.move({
           from: bestMoveUci.substring(0, 2),
           to: bestMoveUci.substring(2, 4),
@@ -46,10 +44,9 @@ const AnalysisPanel = ({
         });
 
         if (!bestMove) {
-          return uciMove; // Si la mejor jugada no es válida, retornar el UCI original
+          return uciMove;
         }
 
-        // Ahora aplicar el ponder en la nueva posición
         const ponderMove = chess.move({
           from: uciMove.substring(0, 2),
           to: uciMove.substring(2, 4),
@@ -58,7 +55,6 @@ const AnalysisPanel = ({
 
         return ponderMove ? ponderMove.san : uciMove;
       } else {
-        // Para la mejor jugada: aplicar directamente
         const move = chess.move({
           from: uciMove.substring(0, 2),
           to: uciMove.substring(2, 4),
@@ -71,7 +67,6 @@ const AnalysisPanel = ({
       return uciMove;
     }
   };
-  // Convert UCI sequence to SAN sequence
   const convertUCISequenceToSAN = (
     uciSequence: string,
     startFen: string
@@ -90,7 +85,6 @@ const AnalysisPanel = ({
         if (move) {
           sanMoves.push(move.san);
         } else {
-          // If move is invalid, return the original UCI sequence
           return uciSequence;
         }
       }
@@ -101,7 +95,6 @@ const AnalysisPanel = ({
     }
   };
 
-  // Parse evaluation to numeric value
   const parseEvaluation = (
     evalStr: string,
     mateStr: string | null
@@ -115,7 +108,6 @@ const AnalysisPanel = ({
     return { value: Math.round(numValue * 100), type: "cp" };
   };
 
-  // Calculate evaluation bar percentage - SIMPLIFIED and more intuitive
   const getEvaluationPercentage = (evaluation: {
     value: number;
     type: "cp" | "mate";
@@ -124,7 +116,6 @@ const AnalysisPanel = ({
       return evaluation.value > 0 ? 100 : 0;
     }
 
-    // Simple linear scaling with limits
     // eslint-disable-next-line prefer-const
     let percentage = 50 + evaluation.value / 10; // 100cp = 10% advantage
 
@@ -132,7 +123,6 @@ const AnalysisPanel = ({
     return Math.max(0, Math.min(100, percentage));
   };
 
-  // Format evaluation for display
   const formatEvaluation = (evaluation: {
     value: number;
     type: "cp" | "mate";
@@ -146,7 +136,6 @@ const AnalysisPanel = ({
     return evaluation.value > 0 ? `+${displayValue}` : displayValue;
   };
 
-  // Get advantage text
   const getAdvantageText = (evaluation: {
     value: number;
     type: "cp" | "mate";
@@ -214,7 +203,7 @@ const AnalysisPanel = ({
         </div>
       </div>
 
-      {/* Evaluation Bar - SIMPLIFIED and more intuitive */}
+      {/* Evaluation Bar*/}
       {evaluation && (
         <div className="bg-slate-700/30 rounded-xl p-4 border border-slate-600 mb-4">
           <div className="flex justify-between items-center mb-3">

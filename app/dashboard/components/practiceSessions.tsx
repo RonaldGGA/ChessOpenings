@@ -1,4 +1,4 @@
-// app/dashboard/components/PracticeSessions.tsx
+// app/dashboard/components/practiceSessions.tsx
 import Link from "next/link";
 import { BarChart3, Calendar, Clock } from "lucide-react";
 import { FaChessBoard } from "react-icons/fa";

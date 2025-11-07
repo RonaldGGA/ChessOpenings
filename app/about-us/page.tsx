@@ -1,7 +1,6 @@
 import { FaUsers, FaRocket, FaAward } from "react-icons/fa";
-import { Navigation } from "../components/navigation";
 import { Target } from "lucide-react";
-import { Footer } from "../components/footer";
+import { Footer } from "../../components/footer";
 
 const AboutPage = () => {
   const teamMembers = [
@@ -32,9 +31,7 @@ const AboutPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-900 via-purple-900 to-slate-900 text-white flex flex-col">
-      <Navigation />
-
+    <div className="min-h-screen  text-white flex flex-col">
       <main className="flex-1 container mx-auto px-4 py-8 md:py-16">
         {/* Hero Section */}
         <div className="text-center max-w-4xl mx-auto mb-16">

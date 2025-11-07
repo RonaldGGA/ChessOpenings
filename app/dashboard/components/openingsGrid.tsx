@@ -1,4 +1,4 @@
-// app/dashboard/components/PracticedOpeningsGrid.tsx
+// app/dashboard/components/practicedOpeningsGrid.tsx
 import Link from "next/link";
 import { Target } from "lucide-react";
 import { Opening } from "../../../types";

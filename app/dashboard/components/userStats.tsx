@@ -1,4 +1,4 @@
-// app/dashboard/components/UserStats.tsx
+// app/dashboard/components/userStats.tsx
 import { Target, Zap, Eye } from "lucide-react";
 import { FaChessBoard } from "react-icons/fa";
 import { DashboardData } from "../../../types";

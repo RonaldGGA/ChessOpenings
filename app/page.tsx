@@ -1,20 +1,16 @@
 import Link from "next/link";
 import { FaChessBoard, FaSearch, FaChartLine } from "react-icons/fa";
-import { Navigation } from "./components/navigation";
-import { Footer } from "./components/footer";
-import HomeToast from "./components/homeToast";
+import { Footer } from "../components/footer";
+import HomeToast from "../components/homeToast";
 
 const HomePage = () => {
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-900 via-purple-900 to-slate-900 text-white flex flex-col">
-      <Navigation />
-      <HomeToast />
-      {/* Hero Section */}
+    <div className="min-h-screen  text-white flex flex-col">
       <main className="flex-1 container mx-auto px-4 py-8 md:py-16">
         <div className="text-center max-w-4xl mx-auto">
           <header className="mb-8 md:mb-12" role="banner">
             <h1 className="text-4xl md:text-6xl font-bold mb-6">
-              <span 
+              <span
                 className="bg-linear-to-r from-yellow-400 via-orange-500 to-yellow-400 bg-clip-text text-transparent bg-size-200 animate-gradient"
                 aria-label="Master Chess Openings - Professional Training Platform"
               >
@@ -42,7 +38,7 @@ const HomePage = () => {
                 prefetch={false}
               >
                 <article className="flex flex-col items-center text-center flex-1">
-                  <div 
+                  <div
                     className="mb-4 p-3 bg-yellow-500/10 rounded-xl border border-yellow-500/20 group-hover:border-yellow-500/40 transition-colors"
                     aria-hidden="true"
                   >
@@ -52,8 +48,8 @@ const HomePage = () => {
                     Free Practice
                   </h3>
                   <p className="text-gray-400 text-sm flex-1">
-                    Interactive practice board with real-time Stockfish analysis,
-                    move suggestions, and opening explorer
+                    Interactive practice board with real-time Stockfish
+                    analysis, move suggestions, and opening explorer
                   </p>
                   <div className="mt-4 text-yellow-400 text-sm font-medium">
                     Start Training →
@@ -69,7 +65,7 @@ const HomePage = () => {
                 prefetch={false}
               >
                 <article className="flex flex-col items-center text-center flex-1">
-                  <div 
+                  <div
                     className="mb-4 p-3 bg-blue-500/10 rounded-xl border border-blue-500/20 group-hover:border-blue-500/40 transition-colors"
                     aria-hidden="true"
                   >
@@ -79,8 +75,8 @@ const HomePage = () => {
                     Opening Database
                   </h3>
                   <p className="text-gray-400 text-sm flex-1">
-                    Explore 1,000+ chess openings with ECO codes, variations, and
-                    professional analysis
+                    Explore 1,000+ chess openings with ECO codes, variations,
+                    and professional analysis
                   </p>
                   <div className="mt-4 text-blue-400 text-sm font-medium">
                     Browse Openings →
@@ -96,7 +92,7 @@ const HomePage = () => {
                 prefetch={false}
               >
                 <article className="flex flex-col items-center text-center flex-1">
-                  <div 
+                  <div
                     className="mb-4 p-3 bg-green-500/10 rounded-xl border border-green-500/20 group-hover:border-green-500/40 transition-colors"
                     aria-hidden="true"
                   >
@@ -124,7 +120,10 @@ const HomePage = () => {
             <div className="bg-slate-800/30 backdrop-blur-sm rounded-2xl p-6 md:p-8 border border-slate-700/50">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 text-center">
                 <div className="p-4">
-                  <div className="text-2xl md:text-3xl font-bold text-yellow-400" aria-label="1000 plus chess openings">
+                  <div
+                    className="text-2xl md:text-3xl font-bold text-yellow-400"
+                    aria-label="1000 plus chess openings"
+                  >
                     1,000+
                   </div>
                   <div className="text-gray-400 text-sm md:text-base">
@@ -132,7 +131,10 @@ const HomePage = () => {
                   </div>
                 </div>
                 <div className="p-4">
-                  <div className="text-2xl md:text-3xl font-bold text-yellow-400" aria-label="50 plus ECO variations">
+                  <div
+                    className="text-2xl md:text-3xl font-bold text-yellow-400"
+                    aria-label="50 plus ECO variations"
+                  >
                     50+
                   </div>
                   <div className="text-gray-400 text-sm md:text-base">
@@ -161,12 +163,15 @@ const HomePage = () => {
 
           <section aria-labelledby="cta-heading">
             <div className="bg-linear-to-r from-slate-800/50 to-purple-900/30 backdrop-blur-sm rounded-2xl p-6 md:p-8 border border-slate-700">
-              <h2 id="cta-heading" className="text-2xl md:text-3xl font-bold mb-4 text-white">
+              <h2
+                id="cta-heading"
+                className="text-2xl md:text-3xl font-bold mb-4 text-white"
+              >
                 Ready to Master Chess?
               </h2>
               <p className="text-gray-300 mb-6 max-w-2xl mx-auto text-base md:text-lg">
-                Join thousands of players improving their opening repertoire with
-                professional tools and analysis.
+                Join thousands of players improving their opening repertoire
+                with professional tools and analysis.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center">
                 <Link
@@ -175,7 +180,10 @@ const HomePage = () => {
                   aria-label="Start Free Chess Practice"
                   prefetch={false}
                 >
-                  <FaChessBoard className="h-4 w-4 md:h-5 md:w-5" aria-hidden="true" />
+                  <FaChessBoard
+                    className="h-4 w-4 md:h-5 md:w-5"
+                    aria-hidden="true"
+                  />
                   Start Free Practice
                 </Link>
                 <Link
@@ -184,7 +192,10 @@ const HomePage = () => {
                   aria-label="Try Searching Chess Openings"
                   prefetch={false}
                 >
-                  <FaSearch className="h-4 w-4 md:h-5 md:w-5" aria-hidden="true" />
+                  <FaSearch
+                    className="h-4 w-4 md:h-5 md:w-5"
+                    aria-hidden="true"
+                  />
                   Try Searching Openings
                 </Link>
               </div>
@@ -192,6 +203,7 @@ const HomePage = () => {
           </section>
         </div>
       </main>
+      <HomeToast />
 
       <Footer />
     </div>

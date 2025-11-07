@@ -1,10 +1,96 @@
 // app/api/openings/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-
 import prisma from '@/lib/prisma';
 import { auth } from '@/auth';
 
-export async function GET(request: NextRequest) {
+interface Alias {
+  id: string;
+  value: string;
+  source: string;
+  openingId: string;
+}
+
+interface UserFavorite {
+  id: string;
+}
+
+interface Visit {
+  count: number;
+}
+
+interface Opening {
+  id: string;
+  fen: string;
+  name: string;
+  eco: string;
+  moves: string;
+  src: string | null;
+  scid: string | null;
+  isEcoRoot: boolean | null;
+  aliases: Alias[];
+  totalVisits: number;
+  totalFavorites: number;
+  totalPracticeSessions: number;
+  UserFavorite?: UserFavorite[];
+  visits?: Visit[];
+}
+
+interface FormattedOpening {
+  id: string;
+  fen: string;
+  name: string;
+  eco: string;
+  moves: string;
+  src: string | null;
+  scid: string | null;
+  isEcoRoot: boolean | null;
+  aliases: Alias[];
+  totalVisits: number;
+  totalFavorites: number;
+  totalPracticeSessions: number;
+  isFavorite: boolean;
+  userVisitCount: number;
+}
+
+interface WhereClause {
+  OR?: Array<{
+    name?: { contains: string; mode: 'insensitive' };
+    eco?: { contains: string; mode: 'insensitive' };
+    moves?: { contains: string; mode: 'insensitive' };
+    aliases?: {
+      some: {
+        value: { contains: string; mode: 'insensitive' };
+      };
+    };
+  }>;
+  eco?: string;
+  UserFavorite?: {
+    some: {
+      userId: string;
+    };
+  };
+}
+
+type OrderByClause = Array<{
+  [key: string]: 'asc' | 'desc';
+}>;
+
+interface PaginationInfo {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasMore: boolean;
+}
+
+interface ApiResponse {
+  openings: FormattedOpening[];
+  ecoOptions: string[];
+  pagination: PaginationInfo;
+}
+
+/**Returns the openings that match with the provided params */
+export async function GET(request: NextRequest): Promise<NextResponse<ApiResponse | { error: string }>> {
   try {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
@@ -17,15 +103,12 @@ export async function GET(request: NextRequest) {
 
     const skip = (page - 1) * limit;
 
-    // Obtener sesión si existe userId
     let session = null;
     if (userId) {
-      session = await auth()
+      session = await auth();
     }
 
-    // Construir where clause basado en búsqueda y filtros
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const where: any = {};
+    const where: WhereClause = {};
 
     if (search) {
       where.OR = [
@@ -46,7 +129,6 @@ export async function GET(request: NextRequest) {
       where.eco = eco;
     }
 
-    // Filtrar por favoritos si está habilitado y hay usuario
     if (favoritesOnly && userId && session?.user?.email) {
       const user = await prisma.user.findUnique({
         where: { email: session.user.email },
@@ -62,9 +144,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Determinar ordenamiento
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let orderBy: any[] = [{ eco: 'asc' }, { name: 'asc' }];
+    let orderBy: OrderByClause = [{ eco: 'asc' }, { name: 'asc' }];
     
     switch (sort) {
       case 'popular':
@@ -74,7 +154,6 @@ export async function GET(request: NextRequest) {
         orderBy = [{ totalFavorites: 'desc' }, { eco: 'asc' }];
         break;
       case 'recent':
-        // Para "recent" necesitamos un enfoque diferente ya que no tenemos un campo de fecha
         orderBy = [{ eco: 'asc' }, { name: 'asc' }];
         break;
       case 'name':
@@ -85,12 +164,10 @@ export async function GET(request: NextRequest) {
         break;
     }
 
-    // Obtener openings con paginación
     const openings = await prisma.opening.findMany({
       where,
       include: {
         aliases: true,
-        // Incluir información de favoritos si hay usuario
         ...(userId && session?.user?.email && {
           UserFavorite: {
             where: {
@@ -103,7 +180,6 @@ export async function GET(request: NextRequest) {
             }
           }
         }),
-        // Incluir información de visitas si hay usuario
         ...(userId && session?.user?.email && {
           visits: {
             where: {
@@ -122,8 +198,7 @@ export async function GET(request: NextRequest) {
       take: limit,
     });
 
-    // Formatear la respuesta para incluir información de usuario
-    const formattedOpenings = openings.map(opening => ({
+    const formattedOpenings: FormattedOpening[] = openings.map((opening: Opening) => ({
       id: opening.id,
       fen: opening.fen,
       name: opening.name,
@@ -136,15 +211,13 @@ export async function GET(request: NextRequest) {
       totalVisits: opening.totalVisits,
       totalFavorites: opening.totalFavorites,
       totalPracticeSessions: opening.totalPracticeSessions,
-      // Información específica del usuario
-      isFavorite: opening.UserFavorite && opening.UserFavorite.length > 0,
+      isFavorite: opening.UserFavorite ? opening.UserFavorite.length > 0 : false,
       userVisitCount: opening.visits && opening.visits.length > 0 
         ? opening.visits[0].count 
         : 0
     }));
 
-    // Obtener opciones de ECO únicas para el filtro
-    const ecoOptions = await prisma.opening.findMany({
+    const ecoOptionsResult = await prisma.opening.findMany({
       distinct: ['eco'],
       select: {
         eco: true
@@ -154,12 +227,11 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // Obtener total para paginación
     const total = await prisma.opening.count({ where });
 
-    return NextResponse.json({ 
+    const response: ApiResponse = {
       openings: formattedOpenings,
-      ecoOptions: ecoOptions.map((item: { eco: string }) => item.eco),
+      ecoOptions: ecoOptionsResult.map((item: { eco: string }) => item.eco),
       pagination: {
         page,
         limit,
@@ -167,7 +239,9 @@ export async function GET(request: NextRequest) {
         totalPages: Math.ceil(total / limit),
         hasMore: skip + limit < total
       }
-    });
+    };
+
+    return NextResponse.json(response);
   } catch (error) {
     console.error('Error fetching openings:', error);
     return NextResponse.json(

@@ -1,5 +1,6 @@
+// components/footer.tsx
+import { Heart } from "lucide-react";
 import Link from "next/link";
-import React from "react";
 import { FaChessKing, FaGithub, FaTwitter } from "react-icons/fa";
 
 export const Footer = () => {
@@ -7,7 +8,6 @@ export const Footer = () => {
     <footer className="bg-slate-800/30 backdrop-blur-sm border-t border-slate-700/50">
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-          {/* Brand */}
           <div className="md:col-span-1">
             <Link href="/" className="flex items-center space-x-3 group mb-4">
               <FaChessKing className="h-6 w-6 text-yellow-400" />
@@ -35,7 +35,6 @@ export const Footer = () => {
             </div>
           </div>
 
-          {/* Product Links */}
           <div>
             <h3 className="font-semibold text-white mb-4">Product</h3>
             <ul className="space-y-2">
@@ -66,10 +65,25 @@ export const Footer = () => {
             </ul>
           </div>
 
-          {/* Company Links */}
           <div>
-            <h3 className="font-semibold text-white mb-4">Company</h3>
+            <h3 className="font-semibold text-white mb-4">ChessMaster</h3>
             <ul className="space-y-2">
+              <li>
+                <Link
+                  href="/contact"
+                  className="text-gray-400 hover:text-yellow-400 transition-colors text-sm"
+                >
+                  Feedback
+                </Link>
+              </li>
+                 <li>
+                <Link
+                  href="/documentation"
+                  className="text-gray-400 hover:text-yellow-400 transition-colors text-sm"
+                >
+                  Documentation
+                </Link>
+              </li>
               <li>
                 <Link
                   href="/about-us"
@@ -86,18 +100,9 @@ export const Footer = () => {
                   Features
                 </Link>
               </li>
-              <li>
-                <Link
-                  href="/contact"
-                  className="text-gray-400 hover:text-yellow-400 transition-colors text-sm"
-                >
-                  Contact
-                </Link>
-              </li>
             </ul>
           </div>
 
-          {/* Legal Links */}
           <div>
             <h3 className="font-semibold text-white mb-4">Legal</h3>
             <ul className="space-y-2">
@@ -129,7 +134,6 @@ export const Footer = () => {
           </div>
         </div>
 
-        {/* Portfolio Notice - Sutil y profesional */}
         <div className="border-t border-slate-700/50 pt-6 mb-4">
           <div className="text-center">
             <p className="text-gray-500 text-xs max-w-2xl mx-auto leading-relaxed">
@@ -140,14 +144,13 @@ export const Footer = () => {
           </div>
         </div>
 
-        {/* Bottom Bar */}
         <div className="pt-4 border-t border-slate-700/50">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="text-gray-400 text-sm mb-4 md:mb-0">
               © 2025 ChessMaster. All rights reserved.
             </div>
-            <div className="text-gray-400 text-sm">
-              Made with ♟️ for chess enthusiasts 
+            <div className="text-gray-400 text-sm flex items-center" >
+              Made with <Heart width={10} height={10} color="red" fill="red" className="mx-2"/> for chess enthusiasts 
             </div>
           </div>
         </div>

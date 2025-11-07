@@ -1,3 +1,4 @@
+//app/contact/page.tsx
 import {
   FaEnvelope,
   FaTwitter,
@@ -7,11 +8,9 @@ import {
   FaQuoteLeft,
   FaHeart,
 } from "react-icons/fa";
-import { Navigation } from "../components/navigation";
-import { Footer } from "../components/footer";
-import { FeedbackForm } from "../components/feedbackForm";
+import { Footer } from "../../components/footer";
+import { FeedbackForm } from "../../components/feedbackForm";
 
-// Types
 interface Feedback {
   _id: string;
   name: string;
@@ -30,11 +29,12 @@ interface ContactMethod {
   link: string | null;
 }
 
-// Server component - fetches data on the server
 async function getFeaturedFeedback(): Promise<Feedback[]> {
   try {
+    // External API linked across all my portfolio projects
     const API_URL =
-      process.env.FEEDBACK_API_BASE_URL || "https://feedbackapi-production-eaaf.up.railway.app";
+      process.env.FEEDBACK_API_BASE_URL ||
+      "https://feedbackapi-production-eaaf.up.railway.app";
     const response = await fetch(`${API_URL}/api/feedback`, {
       next: { revalidate: 60 }, // Revalidate every 60 seconds
     });
@@ -94,27 +94,25 @@ export default async function ContactPage() {
     });
   };
 
-const StarRating = ({ rating }: { rating: number }) => {
-  return (
-    <div className="flex space-x-0.5">
-      {[1, 2, 3, 4, 5].map((star) => (
-        <FaStar
-          key={star}
-          className={`w-3 h-3 ${
-            star <= rating 
-              ? 'text-yellow-400 fill-current' 
-              : 'text-gray-600 fill-gray-600'
-          }`}
-        />
-      ))}
-    </div>
-  );
-};
+  const StarRating = ({ rating }: { rating: number }) => {
+    return (
+      <div className="flex space-x-0.5">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <FaStar
+            key={star}
+            className={`w-3 h-3 ${
+              star <= rating
+                ? "text-yellow-400 fill-current"
+                : "text-gray-600 fill-gray-600"
+            }`}
+          />
+        ))}
+      </div>
+    );
+  };
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-900 via-purple-900 to-slate-900 text-white flex flex-col">
-      <Navigation />
-
+    <div className="min-h-screen  text-white flex flex-col">
       <main className="flex-1 container mx-auto px-4 py-8 md:py-16">
         {/* Hero Section */}
         <div className="text-center max-w-4xl mx-auto mb-16">

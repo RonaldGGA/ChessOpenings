@@ -1,4 +1,4 @@
-// app/explore/page.tsx (COMPLETAMENTE ACCESIBLE)
+// app/search-openings/page.tsx
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
@@ -15,10 +15,10 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { FaChessKing } from "react-icons/fa";
-import ScrollToTop from "../components/scrollToTop";
-import OpeningCard from "../components/openingCard";
-import { useDebounce } from "../hooks/useDebounce";
-import { Navigation } from "../components/navigation";
+import ScrollToTop from "../../components/scrollToTop";
+import OpeningCard from "../../components/openingCard";
+import { useDebounce } from "../../hooks/useDebounce";
+import { Navigation } from "../../components/navigation";
 
 export interface Opening {
   id: string;
@@ -55,19 +55,16 @@ const SearchOpeningsPage = () => {
   const [sortBy, setSortBy] = useState<SortOption>("popular");
   const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
 
-  // Paginación
+  // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(20);
   const [hasMore, setHasMore] = useState(true);
   const [totalLoaded, setTotalLoaded] = useState(0);
 
-  // Debounce para el search term (300ms de delay)
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
-  // Ref para trackear si es el primer render
   const isFirstRender = useRef(true);
 
-  // Fetch openings
   const fetchOpenings = useCallback(
     async (
       page: number = 1,
@@ -91,8 +88,8 @@ const SearchOpeningsPage = () => {
         const params = new URLSearchParams({
           page: page.toString(),
           limit: itemsPerPage.toString(),
-          search: encodeURIComponent(search),
-          eco: encodeURIComponent(eco),
+          search: search,
+          eco: eco,
           sort: sort,
           favoritesOnly: favoritesOnly.toString(),
         });
@@ -110,19 +107,15 @@ const SearchOpeningsPage = () => {
         const data = await response.json();
 
         if (append) {
+          const newIds = new Set(data.openings.map((o: Opening) => o.id));
           setOpenings((prev) => {
-            const allOpenings = [...prev, ...data.openings];
-            const uniqueOpenings = Array.from(
-              new Map(
-                allOpenings.map((opening) => [opening.id, opening])
-              ).values()
-            );
-            return uniqueOpenings;
+            const existingOpenings = prev.filter((o) => !newIds.has(o.id));
+            return [...existingOpenings, ...data.openings];
           });
         } else {
           setOpenings(data.openings || []);
 
-          if (page === 1) {
+          if (page === 1 && data.ecoOptions) {
             const ecoCodes = [...new Set(data.ecoOptions)] as string[];
             setEcoOptions(ecoCodes.sort());
           }
@@ -140,10 +133,10 @@ const SearchOpeningsPage = () => {
         setLoadingMore(false);
       }
     },
-    [itemsPerPage, loading, loadingMore, session]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [itemsPerPage, session]
   );
 
-  // Efecto para búsquedas y filtros
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
@@ -164,7 +157,7 @@ const SearchOpeningsPage = () => {
       showOnlyFavorites
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedSearchTerm, selectedEco, sortBy, showOnlyFavorites]);
+  }, [debouncedSearchTerm, selectedEco, sortBy, showOnlyFavorites]); // Removed fetchOpenings from dependencies
 
   const handleLoadMore = () => {
     if (!loadingMore && hasMore) {
@@ -183,15 +176,15 @@ const SearchOpeningsPage = () => {
     router.push(`/practice/${openingId}`);
   };
 
-  const handleToggleFavorite = (openingId: string, isFavorite: boolean) => {
+  const handleToggleFavorite = (openingId: string) => {
     setOpenings((prev) =>
       prev.map((opening) =>
         opening.id === openingId
           ? {
               ...opening,
-              isFavorite,
+              isFavorite: !opening.isFavorite, // Invert current value
               totalFavorites:
-                (opening.totalFavorites || 0) + (isFavorite ? 1 : -1),
+                (opening.totalFavorites || 0) + (opening.isFavorite ? -1 : 1), // Adjust counter
             }
           : opening
       )
@@ -218,16 +211,14 @@ const SearchOpeningsPage = () => {
   };
 
   return (
-    <div className="min-h-[120vh] bg-linear-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
-      {/* Navigation */}
-      <Navigation/>
-
-      {/* Main Content - Landmark principal agregado */}
+    <div className="min-h-[120vh]  text-white">
       <main className="container mx-auto px-4 py-8">
-        {/* Header con estructura jerárquica correcta */}
         <header className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
-            <FaChessKing className="h-12 w-12 text-yellow-400 mr-3" aria-hidden="true" />
+            <FaChessKing
+              className="h-12 w-12 text-yellow-400 mr-3"
+              aria-hidden="true"
+            />
             <h1 className="text-4xl font-bold bg-linear-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
               Search Chess Openings
             </h1>
@@ -239,28 +230,32 @@ const SearchOpeningsPage = () => {
                 }`
               : "Explore thousands of chess openings from our database"}
             {loading && (
-              <span aria-live="polite" role="status"> (Searching...)</span>
+              <span aria-live="polite" role="status">
+                {" "}
+                (Searching...)
+              </span>
             )}
           </p>
         </header>
 
-        {/* Search and Filter Section con etiquetas accesibles */}
-        <section 
+        <section
           aria-labelledby="search-filters-heading"
           className="bg-slate-800/50 rounded-2xl p-6 mb-8 border border-slate-700"
         >
           <h2 id="search-filters-heading" className="sr-only">
             Search and Filter Options
           </h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-            {/* Search Input con label accesible */}
             <div className="md:col-span-2">
               <label htmlFor="search-openings" className="sr-only">
                 Search chess openings
               </label>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" aria-hidden="true" />
+                <Search
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5"
+                  aria-hidden="true"
+                />
                 <input
                   id="search-openings"
                   type="text"
@@ -271,7 +266,10 @@ const SearchOpeningsPage = () => {
                   aria-describedby="search-description"
                 />
                 {loading && (
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2" aria-hidden="true">
+                  <div
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                    aria-hidden="true"
+                  >
                     <Loader className="h-5 w-5 animate-spin text-yellow-400" />
                   </div>
                 )}
@@ -281,12 +279,14 @@ const SearchOpeningsPage = () => {
               </div>
             </div>
 
-            {/* ECO Filter con label accesible */}
             <div className="relative">
               <label htmlFor="eco-filter" className="sr-only">
                 Filter by ECO code
               </label>
-              <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" aria-hidden="true" />
+              <Filter
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5"
+                aria-hidden="true"
+              />
               <select
                 id="eco-filter"
                 value={selectedEco}
@@ -306,12 +306,14 @@ const SearchOpeningsPage = () => {
               </div>
             </div>
 
-            {/* Sort Options con label accesible */}
             <div className="relative">
               <label htmlFor="sort-options" className="sr-only">
                 Sort openings by
               </label>
-              <TrendingUp className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" aria-hidden="true" />
+              <TrendingUp
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5"
+                aria-hidden="true"
+              />
               <select
                 id="sort-options"
                 value={sortBy}
@@ -331,9 +333,7 @@ const SearchOpeningsPage = () => {
             </div>
           </div>
 
-          {/* View Controls and Active Filters */}
           <div className="flex items-center justify-between">
-            {/* Active Filters */}
             <div className="flex items-center space-x-4">
               {(debouncedSearchTerm || selectedEco) && (
                 <div className="text-sm text-gray-300" aria-live="polite">
@@ -344,7 +344,6 @@ const SearchOpeningsPage = () => {
                 </div>
               )}
 
-              {/* Favorites Filter */}
               {session && (
                 <button
                   onClick={() => setShowOnlyFavorites(!showOnlyFavorites)}
@@ -354,7 +353,11 @@ const SearchOpeningsPage = () => {
                       : "bg-slate-700/50 text-gray-400 border-slate-600 hover:border-yellow-500/50 hover:text-yellow-400"
                   }`}
                   aria-pressed={showOnlyFavorites}
-                  aria-label={showOnlyFavorites ? "Show all openings" : "Show only favorite openings"}
+                  aria-label={
+                    showOnlyFavorites
+                      ? "Show all openings"
+                      : "Show only favorite openings"
+                  }
                 >
                   <Star
                     className={`h-4 w-4 ${
@@ -367,10 +370,9 @@ const SearchOpeningsPage = () => {
               )}
             </div>
 
-            {/* View Mode Toggle con botones accesibles */}
             <div className="flex items-center space-x-4 ml-auto">
               {/* View Mode Toggle */}
-              <div 
+              <div
                 className="flex items-center space-x-1 bg-slate-700/50 rounded-xl p-1 border border-slate-600"
                 role="group"
                 aria-label="View mode selection"
@@ -389,7 +391,7 @@ const SearchOpeningsPage = () => {
                 </button>
                 <button
                   onClick={() => setViewMode("list")}
-                  className={`p-2 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 focus:ring-offset-slate-900 ${
+                  className={`p-2 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 focus:ring-offset-slate-900 ${
                     viewMode === "list"
                       ? "bg-yellow-500 text-slate-900 shadow-lg shadow-yellow-500/25"
                       : "text-gray-400 hover:text-yellow-400 hover:bg-slate-600/50"
@@ -423,16 +425,16 @@ const SearchOpeningsPage = () => {
           <h2 id="results-heading" className="sr-only">
             Search Results
           </h2>
-          
+
           {loading ? (
-            <div 
-              className="flex justify-center items-center py-16" 
-              role="status" 
+            <div
+              className="flex justify-center items-center py-16"
+              role="status"
               aria-live="polite"
               aria-label="Loading openings"
             >
               <div className="text-center">
-                <div 
+                <div
                   className="animate-spin rounded-full h-16 w-16 border-b-2 border-yellow-400 mx-auto mb-4"
                   aria-hidden="true"
                 ></div>
@@ -457,7 +459,7 @@ const SearchOpeningsPage = () => {
                     opening={opening}
                     viewMode={viewMode}
                     onClick={handleOpeningClick}
-                    isFavorite={opening.isFavorite}
+                    isFavorite={opening.isFavorite || false}
                     visitCount={opening.userVisitCount || 0}
                     onToggleFavorite={handleToggleFavorite}
                   />
@@ -471,11 +473,18 @@ const SearchOpeningsPage = () => {
                     onClick={handleLoadMore}
                     disabled={loadingMore}
                     className="px-8 py-4 bg-yellow-500 text-slate-900 font-semibold rounded-xl hover:bg-yellow-400 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3 shadow-lg hover:shadow-xl hover:shadow-yellow-500/25 border-2 border-yellow-500 hover:border-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 focus:ring-offset-slate-900"
-                    aria-label={loadingMore ? "Loading more openings" : "Load more openings"}
+                    aria-label={
+                      loadingMore
+                        ? "Loading more openings"
+                        : "Load more openings"
+                    }
                   >
                     {loadingMore ? (
                       <>
-                        <Loader className="h-5 w-5 animate-spin" aria-hidden="true" />
+                        <Loader
+                          className="h-5 w-5 animate-spin"
+                          aria-hidden="true"
+                        />
                         Loading more openings...
                       </>
                     ) : (
@@ -490,13 +499,18 @@ const SearchOpeningsPage = () => {
 
               {/* No More Results */}
               {!hasMore && openings.length > 0 && (
-                <div 
+                <div
                   className="text-center py-8"
                   role="status"
                   aria-live="polite"
                 >
                   <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 border border-slate-700 max-w-md mx-auto">
-                    <div className="text-yellow-400 text-2xl mb-2" aria-hidden="true">🎉</div>
+                    <div
+                      className="text-yellow-400 text-2xl mb-2"
+                      aria-hidden="true"
+                    >
+                      🎉
+                    </div>
                     <p className="text-gray-400 text-lg mb-2">
                       All {openings.length} openings loaded!
                     </p>
@@ -511,13 +525,12 @@ const SearchOpeningsPage = () => {
 
           {/* No Results State */}
           {!loading && openings.length === 0 && (
-            <div 
-              className="text-center py-16"
-              role="status"
-              aria-live="polite"
-            >
+            <div className="text-center py-16" role="status" aria-live="polite">
               <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-12 border border-slate-700 max-w-2xl mx-auto">
-                <FaChessKing className="h-20 w-20 text-gray-600 mx-auto mb-6" aria-hidden="true" />
+                <FaChessKing
+                  className="h-20 w-20 text-gray-600 mx-auto mb-6"
+                  aria-hidden="true"
+                />
                 <h3 className="text-2xl font-bold text-gray-400 mb-4">
                   {showOnlyFavorites
                     ? "No favorite openings"
@@ -544,6 +557,7 @@ const SearchOpeningsPage = () => {
           )}
         </section>
       </main>
+
       <ScrollToTop />
     </div>
   );

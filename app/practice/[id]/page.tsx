@@ -1,5 +1,5 @@
 // app/practice/[id]/page.tsx
-import OpeningPracticeClient from "@/app/components/openingPracticeClient";
+import OpeningPracticeClient from "@/components/openingPracticeClient";
 import { Alias, FromTo, Opening } from "@/app/generated/prisma/client";
 import Loading from "@/app/loading";
 import { findOpening } from "@/lib/actions";

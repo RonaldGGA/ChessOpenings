@@ -1,7 +1,8 @@
+//app/cookies-policy/page.tsx
 import Link from "next/link";
 import { FaCookie, FaCookieBite, FaUserShield, FaCog } from "react-icons/fa";
-import { Navigation } from "../components/navigation";
-import { Footer } from "../components/footer";
+import { Navigation } from "../../components/navigation";
+import { Footer } from "../../components/footer";
 
 const CookiePolicyPage = () => {
   const lastUpdated = "January 1, 2025";
@@ -58,9 +59,7 @@ const CookiePolicyPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-900 via-purple-900 to-slate-900 text-white flex flex-col">
-      <Navigation />
-
+    <div className="min-h-screen  text-white flex flex-col">
       <main className="flex-1 container mx-auto px-4 py-8 md:py-16">
         <div className="max-w-4xl mx-auto">
           {/* Header */}

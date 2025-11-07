@@ -32,7 +32,6 @@ function NewUserForm() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  // Handle redirection if already logged in
     const handleRedirection = useCallback(() =>{
     if(session?.user){
       router.push(callbackUrl ? callbackUrl : '/')
@@ -71,7 +70,6 @@ function NewUserForm() {
     }
 
     try {
-      // Registrar usuario en tu base de datos
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -85,7 +83,6 @@ function NewUserForm() {
       const data = await response.json()
 
       if (response.ok) {
-        // Después del registro exitoso, iniciar sesión automáticamente
         const result = await signIn('credentials', {
           email: formData.email,
           password: formData.password,
@@ -94,13 +91,10 @@ function NewUserForm() {
         })
 
         if (result?.error) {
-          // Si hay error en el login automático, redirigir al signin
           router.push(`/auth/signin?message=Account created successfully&callbackUrl=${encodeURIComponent(callbackUrl)}`)
         } else if (result?.url) {
-          // Redirección exitosa
           router.push(result.url)
         } else {
-          // Fallback
           router.push(callbackUrl)
         }
       } else {
@@ -123,7 +117,7 @@ function NewUserForm() {
   }
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-900 via-purple-900 to-slate-900 text-white flex flex-col">
+    <div className="min-h-screen  text-white flex flex-col">
       {/* Navigation */}
       <nav className="bg-slate-800/30 backdrop-blur-sm border-b border-slate-700/50">
         <div className="container mx-auto px-4">
@@ -350,11 +344,10 @@ function NewUserForm() {
   )
 }
 
-// Wrapper component with Suspense
 export function NewUser() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-linear-to-br from-slate-900 via-purple-900 to-slate-900 text-white flex items-center justify-center">
+      <div className="min-h-screen  text-white flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400"></div>
       </div>
     }>

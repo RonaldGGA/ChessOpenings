@@ -3,17 +3,14 @@ import { FaChessKing, FaHome, FaSearch } from 'react-icons/fa';
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-900 via-purple-900 to-slate-900 text-white flex flex-col items-center justify-center p-6">
-      {/* Main Content - Compacto */}
+    <div className="min-h-screen  text-white flex flex-col items-center justify-center p-6">
       <div className="text-center max-w-md mx-auto">
-        {/* 404 Number más pequeño */}
         <div className="relative mb-6">
           <div className="text-6xl font-bold bg-linear-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
             404
           </div>
         </div>
 
-        {/* Message más conciso */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-white mb-3">
             Page Not Found
@@ -23,7 +20,6 @@ export default function NotFound() {
           </p>
         </div>
 
-        {/* Chess Board Illustration más pequeño */}
         <div className="mb-6 flex justify-center">
           <div className="grid grid-cols-4 gap-1 max-w-xs mx-auto">
             {[...Array(16)].map((_, i) => (
@@ -39,7 +35,6 @@ export default function NotFound() {
           </div>
         </div>
 
-        {/* Action Buttons compactos */}
         <div className="flex flex-col gap-3 justify-center mb-6">
           <Link
             href="/"
@@ -58,7 +53,6 @@ export default function NotFound() {
         </div>
       </div>
 
-      {/* Footer compacto */}
       <footer className="absolute bottom-0 left-0 right-0 bg-slate-800/30 backdrop-blur-sm border-t border-slate-700/50">
         <div className="container mx-auto px-4 py-3">
           <div className="flex flex-col items-center text-xs text-gray-400">

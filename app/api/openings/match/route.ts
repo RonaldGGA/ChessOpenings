@@ -1,5 +1,40 @@
+//api/openings/match
 import prisma from '@/lib/prisma';
 import { NextRequest, NextResponse } from 'next/server'
+
+    type BaseOpening = {
+      id: string;
+      fen: string;
+      eco: string;
+      moves: string;
+      name: string;
+      src: string;
+      isEcoRoot: boolean | null;
+      aliases: { source: string; value: string }[];
+    };
+
+    type Transition = {
+      id: string;
+      fromFen: string;
+      toFen: string;
+      fromSrc: string;
+      toSrc: string;
+      fromOpening: {
+        id: string;
+        fen: string;
+        eco: string;
+        name: string;
+        moves: string;
+      } | null;
+      toOpening: {
+        id: string;
+        fen: string;
+        eco: string;
+        name: string;
+        moves: string;
+      } | null;
+    };
+
 
 function formatMoveHistory(moves: string[]): string {
   if (moves.length === 0) return '';
@@ -8,15 +43,12 @@ function formatMoveHistory(moves: string[]): string {
   let moveNumber = 1;
   
   for (let i = 0; i < moves.length; i += 2) {
-    // Agregar número de jugada
     formatted += `${moveNumber}. ${moves[i]}`;
     
-    // Agregar movimiento de negras si existe
     if (i + 1 < moves.length) {
       formatted += ` ${moves[i + 1]}`;
     }
     
-    // Agregar espacio entre jugadas (excepto después de la última)
     if (i + 2 < moves.length) {
       formatted += ' ';
     }
@@ -26,14 +58,11 @@ function formatMoveHistory(moves: string[]): string {
   
   return formatted;
 }
-
-export async function GET(request: NextRequest): Promise<NextResponse> {
-  console.log('Starting /api/openings/match request');
-  
+/**Returns the coincidences between the moveHistory and the openings in the database */
+export async function GET(request: NextRequest): Promise<NextResponse> {  
   try {
     const { searchParams } = new URL(request.url)
-    console.log('Search params:', Object.fromEntries(searchParams));
-    
+
     const moveHistory = searchParams.get('moveHistory')
     if (!moveHistory) {
       console.log('Missing moveHistory parameter');
@@ -67,43 +96,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       })
     }
 
-    // Convertir el array al formato de la base de datos
     const normalizedMoves = formatMoveHistory(movesArray)
-
-
-    // Tipos explícitos para los resultados
-    type BaseOpening = {
-      id: string;
-      fen: string;
-      eco: string;
-      moves: string;
-      name: string;
-      src: string;
-      isEcoRoot: boolean | null;
-      aliases: { source: string; value: string }[];
-    };
-
-    type Transition = {
-      id: string;
-      fromFen: string;
-      toFen: string;
-      fromSrc: string;
-      toSrc: string;
-      fromOpening: {
-        id: string;
-        fen: string;
-        eco: string;
-        name: string;
-        moves: string;
-      } | null;
-      toOpening: {
-        id: string;
-        fen: string;
-        eco: string;
-        name: string;
-        moves: string;
-      } | null;
-    };
 
     const [baseOpenings, transitions]: [BaseOpening[], Transition[]] = await Promise.all([
       prisma.opening.findMany({

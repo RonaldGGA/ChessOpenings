@@ -21,7 +21,6 @@ function SignInForm() {
   const [error, setError] = useState('')
   const [showError, setShowError] = useState(false)
 
-  // Effect to handle OAuth errors from URL
   useEffect(() => {
     if (errorType) {
       switch (errorType) {
@@ -55,7 +54,6 @@ function SignInForm() {
           setShowError(true)
       }
       
-      // Clear error from URL without reloading the page
       const newUrl = window.location.pathname + 
         (callbackUrl !== '/' ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : '')
       window.history.replaceState({}, '', newUrl)
@@ -79,7 +77,6 @@ function SignInForm() {
       if (result?.error) {
         let errorMessage = 'Incorrect email or password'
         
-        // Handle specific credentials errors
         if (result.error.includes('CredentialsSignin')) {
           errorMessage = 'Incorrect email or password. Please check your credentials.'
         } else if (result.error.includes('OAuthAccountNotLinked')) {
@@ -89,10 +86,8 @@ function SignInForm() {
         setError(errorMessage)
         setShowError(true)
       } else if (result?.url) {
-        // Success - redirect
         router.push(result.url)
       } else {
-        // Fallback
         router.push(callbackUrl)
       }
     } catch (err) {
@@ -110,12 +105,10 @@ function SignInForm() {
     setShowError(false)
 
     try {
-      // Use redirect: true to avoid issues with popups/blockers
       await signIn(provider, { 
         callbackUrl,
         redirect: true 
       })
-      // We don't need to handle success here because redirection takes care of it
     } catch (err) {
       console.error('OAuth sign in error:', err)
       setError('Error signing in with ' + provider + '. Please try again.')
@@ -130,7 +123,7 @@ function SignInForm() {
   }
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-900 via-purple-900 to-slate-900 text-white flex flex-col">
+    <div className="min-h-screen  text-white flex flex-col">
       {/* Navigation */}
       <nav className="bg-slate-800/30 backdrop-blur-sm border-b border-slate-700/50">
         <div className="container mx-auto px-4">
@@ -346,11 +339,10 @@ function SignInForm() {
   )
 }
 
-// Wrapper component with Suspense
 export function SignIn() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-linear-to-br from-slate-900 via-purple-900 to-slate-900 text-white flex items-center justify-center">
+      <div className="min-h-screen  text-white flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400"></div>
       </div>
     }>

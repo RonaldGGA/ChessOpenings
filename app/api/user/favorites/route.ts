@@ -3,6 +3,7 @@ import { auth } from '@/auth';
 import prisma from '@/lib/prisma';
 import { NextRequest, NextResponse } from 'next/server';
 
+/** Adds/Removes an opening as favorite by managing the table userFavorite*/
 export async function POST(request: NextRequest) {
   const session = await auth();
 
@@ -26,7 +27,6 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === 'add') {
-      // Verificar si ya existe
       const existingFavorite = await prisma.userFavorite.findUnique({
         where: {
           userId_openingId: {
@@ -40,7 +40,6 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ message: 'Already in favorites' });
       }
 
-      // Agregar a favoritos
       const favorite = await prisma.userFavorite.create({
         data: {
           userId: user.id,
@@ -48,7 +47,6 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      // Incrementar el contador de favoritos en Opening
       await prisma.opening.update({
         where: { id: openingId },
         data: {
@@ -58,7 +56,6 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json({ favorite, action: 'added' });
     } else if (action === 'remove') {
-      // Eliminar de favoritos
       await prisma.userFavorite.deleteMany({
         where: {
           userId: user.id,
@@ -66,7 +63,6 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      // Decrementar el contador de favoritos en Opening
       await prisma.opening.update({
         where: { id: openingId },
         data: {
@@ -83,7 +79,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-
+/**Gets the favorited openings of the user with a provided limit by managing the table userFavorite*/
 export async function GET(request: NextRequest) {
   const session = await auth();
 

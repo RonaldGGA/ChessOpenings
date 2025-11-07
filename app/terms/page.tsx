@@ -1,32 +1,37 @@
-import Link from 'next/link';
-import { FaGavel, FaUserShield, FaExclamationTriangle, FaBalanceScale } from 'react-icons/fa';
-import { Navigation } from '../components/navigation';
-import { Footer } from '../components/footer';
+// app/terms/page.tsx
+import Link from "next/link";
+import {
+  FaGavel,
+  FaUserShield,
+  FaExclamationTriangle,
+  FaBalanceScale,
+} from "react-icons/fa";
+import { Footer } from "../../components/footer";
 
 const TermsPage = () => {
   const lastUpdated = "November 5, 2025";
-  
+
   const sections = [
     {
       icon: FaGavel,
       title: "Acceptance of Terms",
-      content: `By accessing and using ChessMaster ("the Service"), you accept and agree to be bound by the terms and provision of this agreement.`
+      content: `By accessing and using ChessMaster ("the Service"), you accept and agree to be bound by the terms and provision of this agreement.`,
     },
     {
       icon: FaUserShield,
       title: "User Accounts",
-      content: `You are responsible for maintaining the confidentiality of your account and password. You agree to accept responsibility for all activities that occur under your account.`
+      content: `You are responsible for maintaining the confidentiality of your account and password. You agree to accept responsibility for all activities that occur under your account.`,
     },
     {
       icon: FaExclamationTriangle,
       title: "Prohibited Uses",
-      content: `You may not use the Service for any illegal or unauthorized purpose. You must not, in the use of the Service, violate any laws in your jurisdiction.`
+      content: `You may not use the Service for any illegal or unauthorized purpose. You must not, in the use of the Service, violate any laws in your jurisdiction.`,
     },
     {
       icon: FaBalanceScale,
       title: "Intellectual Property",
-      content: `The Service and its original content, features, and functionality are owned by ChessMaster and are protected by international copyright, trademark, and other intellectual property laws.`
-    }
+      content: `The Service and its original content, features, and functionality are owned by ChessMaster and are protected by international copyright, trademark, and other intellectual property laws.`,
+    },
   ];
 
   const prohibitedActivities = [
@@ -35,13 +40,11 @@ const TermsPage = () => {
     "Distributing malware or harmful code",
     "Spamming other users",
     "Impersonating other individuals or entities",
-    "Violating any applicable laws or regulations"
+    "Violating any applicable laws or regulations",
   ];
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-900 via-purple-900 to-slate-900 text-white flex flex-col">
-      <Navigation />
-      
+    <div className="min-h-screen  text-white flex flex-col">
       <main className="flex-1 container mx-auto px-4 py-8 md:py-16">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
@@ -53,7 +56,10 @@ const TermsPage = () => {
             </h1>
             <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 border border-slate-700">
               <p className="text-gray-300 mb-4">
-                Last updated: <span className="text-yellow-400 font-semibold">{lastUpdated}</span>
+                Last updated:{" "}
+                <span className="text-yellow-400 font-semibold">
+                  {lastUpdated}
+                </span>
               </p>
               <p className="text-lg text-gray-300">
                 Please read these terms carefully before using our Service.
@@ -64,7 +70,7 @@ const TermsPage = () => {
           {/* Main Content */}
           <div className="space-y-8">
             {sections.map((section, index) => (
-              <section 
+              <section
                 key={index}
                 className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-8 border border-slate-700"
               >
@@ -104,17 +110,24 @@ const TermsPage = () => {
               </h2>
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-xl font-semibold text-white mb-3">Free Service</h3>
+                  <h3 className="text-xl font-semibold text-white mb-3">
+                    Free Service
+                  </h3>
                   <p className="text-gray-300">
-                    ChessMaster is provided as a free service. We reserve the right to modify or discontinue, 
-                    temporarily or permanently, the Service with or without notice.
+                    ChessMaster is provided as a free service. We reserve the
+                    right to modify or discontinue, temporarily or permanently,
+                    the Service with or without notice.
                   </p>
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-white mb-3">Termination</h3>
+                  <h3 className="text-xl font-semibold text-white mb-3">
+                    Termination
+                  </h3>
                   <p className="text-gray-300">
-                    We may terminate or suspend access to our Service immediately, without prior notice or liability, 
-                    for any reason whatsoever, including without limitation if you breach the Terms.
+                    We may terminate or suspend access to our Service
+                    immediately, without prior notice or liability, for any
+                    reason whatsoever, including without limitation if you
+                    breach the Terms.
                   </p>
                 </div>
               </div>
@@ -126,10 +139,13 @@ const TermsPage = () => {
                 Disclaimer
               </h2>
               <p className="text-gray-300 leading-relaxed mb-4">
-                YOUR USE OF THE SERVICE IS AT YOUR SOLE RISK. THE SERVICE IS PROVIDED ON AN &quot;AS IS&quot; AND &quot;AS AVAILABLE&quot; BASIS.
+                YOUR USE OF THE SERVICE IS AT YOUR SOLE RISK. THE SERVICE IS
+                PROVIDED ON AN &quot;AS IS&quot; AND &quot;AS AVAILABLE&quot;
+                BASIS.
               </p>
               <p className="text-gray-300 leading-relaxed">
-                ChessMaster does not warrant that the Service will be uninterrupted, timely, secure, or error-free.
+                ChessMaster does not warrant that the Service will be
+                uninterrupted, timely, secure, or error-free.
               </p>
             </section>
 
@@ -139,10 +155,11 @@ const TermsPage = () => {
                 Questions About Our Terms?
               </h2>
               <p className="text-gray-300 mb-6">
-                If you have any questions about these Terms of Service, please contact us.
+                If you have any questions about these Terms of Service, please
+                contact us.
               </p>
-              <Link 
-                href="/contact" 
+              <Link
+                href="/contact"
                 className="inline-flex items-center px-6 py-3 bg-yellow-500 text-slate-900 font-semibold rounded-xl hover:bg-yellow-400 transition-all duration-300 border-2 border-yellow-500 hover:border-yellow-400"
               >
                 Contact Us
@@ -151,7 +168,7 @@ const TermsPage = () => {
           </div>
         </div>
       </main>
-      <Footer/>
+      <Footer />
     </div>
   );
 };

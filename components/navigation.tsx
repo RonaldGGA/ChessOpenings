@@ -1,10 +1,10 @@
-// components/Navigation.tsx
+// components/navigation.tsx
 "use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Search, Menu, X, BarChart3 } from "lucide-react";
-import UserButton from "@/app/components/userButton";
+import { Home, Search, Menu, X, BarChart3, MessageCircle } from "lucide-react";
+import UserButton from "@/components/userButton";
 import { useState, useEffect } from "react";
 import { FaChessBoard } from "react-icons/fa";
 
@@ -13,15 +13,14 @@ export function Navigation() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  // Evitar hidratación incorrecta en SSR
   useEffect(() => {
-    const changeSetMounted = () => {
-      setMounted(true);
-    };
-    changeSetMounted();
+    const changeIsMounted = ()=>{
+      setMounted(true)
+    }
+    changeIsMounted()
   }, []);
 
-  // Cerrar menú móvil al redimensionar
+  // Close mobile menu on resize
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 768) {
@@ -44,13 +43,17 @@ export function Navigation() {
     {
       href: "/search-openings",
       icon: Search,
-      label: "Search Openings",
+      label: "Search",
       exact: false,
     },
-    { href: "/dashboard", icon: BarChart3, label: "Dashboard", exact: false },
+    {
+      href: "/dashboard",
+      icon: BarChart3,
+      label: "Your Stats",
+      exact: false,
+    },
   ];
 
-  // Función para verificar si un enlace está activo
   const isActive = (href: string, exact: boolean) => {
     if (!mounted) return false;
 
@@ -58,11 +61,9 @@ export function Navigation() {
       return pathname === href;
     }
 
-    // Para rutas no exactas, verificar si la ruta comienza con el href
     return pathname.startsWith(href);
   };
 
-  // Estilos para estados activos/inactivos
   const getLinkStyles = (isActive: boolean) =>
     isActive
       ? "text-yellow-400 bg-yellow-400/10 border border-yellow-400/20 shadow-lg shadow-yellow-400/10"
@@ -72,13 +73,16 @@ export function Navigation() {
     isActive
       ? "scale-110 text-yellow-400"
       : "group-hover:scale-110 transition-transform";
+      
+  if(pathname.includes("auth") || pathname.includes("documentation") || (pathname.includes("practice") && !pathname.includes("free-practice"))){
+    return
+  }
 
   return (
     <>
-      <nav className="bg-slate-800/30 backdrop-blur-sm border-b border-slate-700/50 sticky top-0 z-50">
+      <nav className= " text-white backdrop-blur-sm border-b border-slate-700/50 sticky top-0 z-50">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
-            {/* Logo */}
             <Link
               href="/"
               className="flex items-center space-x-3 group shrink-0"
@@ -107,26 +111,45 @@ export function Navigation() {
                     )}`}
                   >
                     <item.icon className={`h-4 w-4 ${getIconStyles(active)}`} />
-                    <span className="font-medium">{item.label}</span>
+                    <span className="text-sm font-medium hidden lg:block">{item.label}</span>
                     {active && (
                       <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-yellow-400 rounded-full"></div>
                     )}
                   </Link>
                 );
               })}
+              
+              <Link
+                href="/contact"
+                className={`flex relative items-center text-sm space-x-2 px-4 py-2 rounded-xl transition-all duration-200 group ${getLinkStyles(
+                  isActive("/contact", false)
+                )}`}
+              >
+                <MessageCircle className={`h-4 w-4 ${getIconStyles(isActive("/contact", false))}`} />
+                <span className="font-medium">Feedback</span>
+                {isActive("/contact", false) && (
+                  <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-yellow-400 rounded-full"></div>
+                )}
+              </Link>
             </div>
 
-            {/* User Section */}
-            <div className="flex items-center space-x-4">
-              {/* Desktop User Button */}
+            <div className="flex items-center space-x-3">
+              <Link
+                href="/contact"
+                className="md:hidden flex items-center space-x-1 px-3 py-2 rounded-lg bg-slate-700/50 border border-slate-600 hover:border-yellow-500/50 transition-colors"
+                aria-label="Leave Feedback"
+              >
+                <MessageCircle className="h-4 w-4" />
+                <span className="text-sm font-medium">Feedback</span>
+              </Link>
+
               <div className="hidden md:block">
                 <UserButton />
               </div>
 
-              {/* Mobile Menu Button */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="md:hidden p-2 rounded-lg bg-slate-700/50 border border-slate-600 hover:border-yellow-500/50 transition-colors mobile-menu-button"
+                className="md:hidden p-2 rounded-lg bg-slate-700/50 border border-slate-600 hover:border-yellow-500/50 transition-colors"
                 aria-label="Toggle menu"
               >
                 {mobileMenuOpen ? (
@@ -139,15 +162,13 @@ export function Navigation() {
           </div>
         </div>
       </nav>
-
-      {/* Mobile Menu Overlay */}
       {mobileMenuOpen && mounted && (
         <div
           className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden"
           onClick={() => setMobileMenuOpen(false)}
         >
           <div
-            className="fixed right-0 top-18 h-full w-80 bg-slate-900/95 backdrop-blur-md border-l border-slate-700/50 shadow-2xl mobile-menu"
+            className="fixed right-0 top-18 h-full w-80 bg-slate-900/95 backdrop-blur-md border-l border-slate-700/50 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-6 space-y-2">
@@ -170,7 +191,7 @@ export function Navigation() {
                   </Link>
                 );
               })}
-              <div className="flex justify-center mt-4">
+              <div className="pt-4 border-t border-slate-700/50">
                 <UserButton />
               </div>
             </div>

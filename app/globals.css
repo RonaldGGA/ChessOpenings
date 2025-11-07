@@ -1,6 +1,5 @@
 @import "tailwindcss";
 
-/* Agregar a tu archivo CSS global */
 .message-bubble {
   position: relative;
 }

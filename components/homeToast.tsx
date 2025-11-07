@@ -1,3 +1,5 @@
+// components/homeToast.tsx
+
 "use client";
 
 import { useEffect, useState } from 'react';
@@ -7,7 +9,6 @@ export default function HomeToast() {
   const [showToast, setShowToast] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
-  // Solo ejecutar en el cliente
   useEffect(() => {
     const changeSetMounted = () =>{
         setIsMounted(true);
@@ -30,7 +31,7 @@ export default function HomeToast() {
   };
 
   const handleGithubClick = () => {
-    window.open('https://github.com/tu-usuario/tu-repo', '_blank');
+    window.open('https://github.com/RonaldGGA/ChessMaster', '_blank');
     handleCloseToast();
   };
 
@@ -39,7 +40,6 @@ export default function HomeToast() {
     handleCloseToast();
   };
 
-  // No renderizar nada hasta que se monte en el cliente
   if (!isMounted) {
     return null;
   }

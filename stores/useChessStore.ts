@@ -24,7 +24,6 @@ interface GameSettings {
 }
 
 interface ChessGameState {
-  // Estado del juego
   chessGame: Chess;
   relatedOpenings: Opening[];
   moveAnalysis: StockfishAnalysis | null;
@@ -44,7 +43,6 @@ interface ChessGameState {
   
 
 
-  // Acciones
   setChessGame: (chess: Chess) => void;
   setRelatedOpenings: (openings: Opening[]) => void;
   setMoveAnalysis: (analysis: StockfishAnalysis | null) => void;
@@ -61,7 +59,6 @@ interface ChessGameState {
   setSettings: (settings: GameSettings) => void;
   updateSettings: (settings: Partial<GameSettings>) => void;
 
-  // Acciones del juego
   resetBoard: () => void;
   makeMove: (from: string, to: string, promotion?: string) => boolean;
   getMoveOptions: (square: Square) => boolean;
@@ -70,7 +67,6 @@ interface ChessGameState {
 }
 
 export const useChessGame = create<ChessGameState>((set, get) => ({
-  // Estado inicial
   chessGame: new Chess(),
   relatedOpenings: [],
   moveAnalysis: null,
@@ -91,11 +87,10 @@ export const useChessGame = create<ChessGameState>((set, get) => ({
     showRelatedOpenings: true,
     showAnalysis: true,
     showMoveHistory: true,
-    cpuSide: 'none',
+    cpuSide: 'black',
     analysisDepth: 11,
   },
 
-  // Setters básicos
   setChessGame: (chess) => set({ chessGame: chess }),
   setRelatedOpenings: (openings) => set({ relatedOpenings: openings }),
   setMoveAnalysis: (analysis) => set({ moveAnalysis: analysis }),
@@ -114,17 +109,15 @@ export const useChessGame = create<ChessGameState>((set, get) => ({
     settings: { ...state.settings, ...updates } 
   })),
   
-    // Nueva acción para cargar posiciones de apertura
   loadOpeningPosition: (fen) => {
     try {
-      // Crear una nueva instancia de Chess para evitar problemas de referencia
       const newChess = new Chess();
       newChess.load(fen);
       
       set({
         chessGame: newChess,
         chessPosition: fen,
-        movesHistory: [],  // Resetear el historial cuando cargas una nueva posición
+        movesHistory: [],  
         moveAnalysis: null,
         relatedOpenings: [],
         optionSquares: {},
@@ -134,7 +127,6 @@ export const useChessGame = create<ChessGameState>((set, get) => ({
       });
     } catch (error) {
       console.error('Error loading opening position:', error);
-      // Si hay error, cargar posición por defecto
       const defaultChess = new Chess();
       set({
         chessGame: defaultChess,
@@ -144,7 +136,6 @@ export const useChessGame = create<ChessGameState>((set, get) => ({
     }
   },
 
-  // Reset del tablero
   resetBoard: () => {
     const newChess = new Chess();
     set({
@@ -160,7 +151,6 @@ export const useChessGame = create<ChessGameState>((set, get) => ({
     });
   },
 
-  // Hacer un movimiento
   makeMove: (from, to, promotion = 'q') => {
     const state = get();
     try {
@@ -180,7 +170,6 @@ export const useChessGame = create<ChessGameState>((set, get) => ({
     }
   },
 
-  // Obtener opciones de movimiento para una casilla
   getMoveOptions: (square) => {
     const state = get();
     const moves = state.chessGame.moves({
@@ -214,7 +203,6 @@ export const useChessGame = create<ChessGameState>((set, get) => ({
     return true;
   },
 
-  // Manejar clic en casilla
   onSquareClick: ({square, piece}) => {
     const state = get();
     const { settings, isCpuThinking, moveFrom } = state;
@@ -252,8 +240,6 @@ export const useChessGame = create<ChessGameState>((set, get) => ({
       set({ moveFrom: hasMoveOptions ? square : "" });
     }
   },
-
-  // Manejar arrastre de pieza
   onPieceDrop: ({sourceSquare, targetSquare}) => {
     const state = get();
     const { settings, isCpuThinking } = state;

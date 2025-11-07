@@ -1,7 +1,9 @@
+//app/api/user/practice-sessions/route
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { auth } from '@/auth';
 
+/**Creates a new practice-session and increments de opening.totalPracticeSessions count*/
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
@@ -27,7 +29,6 @@ export async function POST(request: NextRequest) {
       hasOpeningId: !!openingId
     });
 
-    // Validaciones
     if (!moves || !finalFen || movesCount === undefined) {
       console.error('Missing required fields:', { moves: !!moves, finalFen: !!finalFen, movesCount });
       return NextResponse.json({ 
@@ -45,7 +46,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Crear la sesión de práctica
     const practiceSession = await prisma.practiceSession.create({
       data: {
         userId: user.id,
@@ -58,7 +58,6 @@ export async function POST(request: NextRequest) {
 
     console.log('Practice session created:', practiceSession.id);
 
-    // Si hay openingId, incrementar el contador de sesiones de práctica en Opening
     if (openingId) {
       try {
         await prisma.opening.update({
@@ -70,7 +69,6 @@ export async function POST(request: NextRequest) {
         console.log('Opening practice count updated:', openingId);
       } catch (openingError) {
         console.error('Error updating opening practice count:', openingError);
-        // No fallar la operación principal si esto falla
       }
     }
 
@@ -92,6 +90,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
+/**Returns the practice-sessions of an user with a default limit of 20*/
 export async function GET(request: NextRequest) {
   try {
     const session = await auth();
